@@ -1,0 +1,1 @@
+Copy of go-ethereum@v1.13.2/common/ to relax some parsing rules

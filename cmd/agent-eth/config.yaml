@@ -1,0 +1,25 @@
+
+chains:
+  ETH:
+    networks:
+      SEPOLIA:
+        testnet: true
+        rpcUrl: https://rpc-sepolia.rockx.com
+      GOERLI:
+        testnet: true
+        rpcUrl: https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161	
+  TRX:
+    networks:
+      NILE:
+        testnet: true
+        rpcUrl: https://nile.trongrid.io/jsonrpc
+  BNB:
+    networks:
+      TESTNET:
+        testnet: true
+        rpcUrl: https://rpc.ankr.com/bsc_testnet_chapel/c4edfff08323d5dd4c22c84f688176debec7a3ddcd6319751e8626f77a81e1b9
+      MAINNET:
+        testnet: false
+        rpcUrl: https://rpc.ankr.com/bsc/c4edfff08323d5dd4c22c84f688176debec7a3ddcd6319751e8626f77a81e1b9
+
+
