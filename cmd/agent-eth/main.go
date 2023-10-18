@@ -45,7 +45,6 @@ func interceptorLogger(logger *slog.Logger) logging.Logger {
 		logger = slog.Default()
 	}
 	return logging.LoggerFunc(func(_ context.Context, lvl logging.Level, msg string, fields ...any) {
-		//largs := append([]any{"msg", msg}, fields...)
 		switch lvl {
 		case logging.LevelDebug:
 			logger.Debug(msg, fields...)
@@ -104,7 +103,6 @@ func main() {
 			config := config.LoadConfig(cCtx.String("config"))
 			log.Printf("Config: %+v", config)
 
-			//srv := server.InitServer(config.GetChainConfig("ETH:SEPOLIA"))
 			srv := InitServerProxy(config.Chains)
 
 			grpcPanicRecoveryHandler := func(p any) (err error) {
@@ -154,6 +152,7 @@ func InitServerProxy(configs map[string]config.ChainTypeConfig) *server.ServerPr
 			nv.ChainType = k
 			nv.ChainNetwork = nk
 			var ethSrv server.IUbtAgentServer
+			// TODO: use mapping
 			if nv.ChainType == "TRX" {
 				ethSrv = trx.InitServer(context.Background(), &nv)
 			} else {

@@ -17,12 +17,12 @@ import (
 )
 
 func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTransferRequest) (*services.TransactionIntent, error) {
-	nonce, err := srv.c.PendingNonceAt(ctx, common.HexToAddress(req.From))
+	nonce, err := srv.C.PendingNonceAt(ctx, common.HexToAddress(req.From))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get nonce: %v", err)
 	}
 
-	gasPrice, err := srv.c.SuggestGasPrice(ctx)
+	gasPrice, err := srv.C.SuggestGasPrice(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get gas price: %v", err)
 	}
@@ -57,7 +57,7 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 		data = append(data, paddedAmount...)
 
 		slog.Debug("estimating gas", "from", req.From, "to", req.To, "tokenAddress", tokenAddress)
-		gasLimit, err := srv.c.EstimateGas(ctx, ethereum.CallMsg{
+		gasLimit, err := srv.C.EstimateGas(ctx, ethereum.CallMsg{
 			From: common.HexToAddress(req.From),
 			To:   &tokenAddress,
 			Data: data,
@@ -73,8 +73,8 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 		return nil, status.Errorf(codes.InvalidArgument, "invalid currency id: %s", req.Amount.CurrencyId)
 	}
 
-	slog.Debug("chainId", "chainId", srv.chainId, "tx", tx)
-	txId := types.NewEIP155Signer(srv.chainId).Hash(tx)
+	slog.Debug("chainId", "chainId", srv.ChainId, "tx", tx)
+	txId := types.NewEIP155Signer(srv.ChainId).Hash(tx)
 
 	slog.Debug("calculating txId", "txId", txId)
 	rawTx, err := tx.MarshalBinary()
@@ -96,7 +96,7 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 	//tx2, err := types.SignTx(tx, types.NewEIP155Signer(big.NewInt(1)), nil)
 	//tx2.
 	//(types.NewEIP155Signer(big.NewInt(1)))
-	//srv.c.EstimateGas(ctx, tx)
+	//srv.C.EstimateGas(ctx, tx)
 
 	//return nil, status.Errorf(codes.Unimplemented, "method CreateTransfer not implemented")
 }
@@ -126,13 +126,13 @@ func (srv *EthServer) Send(ctx context.Context, req *services.TransactionSendReq
 		return nil, status.Errorf(codes.Internal, "failed to unmarshal raw tx: %v", err)
 	}
 
-	tx, err = tx.WithSignature(types.NewEIP155Signer(srv.chainId), req.Signatures[0])
+	tx, err = tx.WithSignature(types.NewEIP155Signer(srv.ChainId), req.Signatures[0])
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to sign tx: %v", err)
 	}
 
 	slog.Debug("sendTx", "tx", tx)
-	err = srv.c.Client.SendTransaction(ctx, tx)
+	err = srv.C.Client.SendTransaction(ctx, tx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to send tx: %v", err)
 	}

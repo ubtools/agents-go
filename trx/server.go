@@ -7,23 +7,28 @@ import (
 	"math/big"
 	"ubt/agents/eth/client"
 	"ubt/agents/eth/config"
+	"ubt/agents/eth/server"
 	trxrpc "ubt/agents/trx/rpc"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ubtools/ubt/go/api/proto/services"
-	"github.com/ubtools/ubt/go/blockchain"
 )
 
 type TrxServer struct {
-	services.UnimplementedUbtChainServiceServer
-	services.UnimplementedUbtBlockServiceServer
-	services.UnimplementedUbtConstructServiceServer
-	services.UnimplementedUbtCurrencyServiceServer
-	c       *client.RateLimitedClient
-	config  *config.ChainConfig
-	chain   blockchain.Blockchain
-	chainId *big.Int
+	server.EthServer
+	//services.UnimplementedUbtChainServiceServer
+	//services.UnimplementedUbtBlockServiceServer
+	//services.UnimplementedUbtConstructServiceServer
+	//services.UnimplementedUbtCurrencyServiceServer
+	//c       *client.RateLimitedClient
+	//config  *config.ChainConfig
+	//chain   blockchain.Blockchain
+	//chainId *big.Int
+}
+
+func (srv *TrxServer) String() string {
+	return fmt.Sprintf("TrxServer{%s:%s}", srv.Config.ChainType, srv.Config.ChainNetwork)
 }
 
 func InitServer(ctx context.Context, config *config.ChainConfig) *TrxServer {
@@ -37,7 +42,7 @@ func InitServer(ctx context.Context, config *config.ChainConfig) *TrxServer {
 		panic(err)
 	}
 	slog.Info("Connected", "chainId", chainId)
-	var srv = TrxServer{c: client, config: config, chainId: chainId}
+	var srv = TrxServer{EthServer: server.EthServer{C: client, Config: *config, ChainId: chainId}}
 	return &srv
 }
 
@@ -73,7 +78,7 @@ func (srv *TrxServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 		})
 	}
 
-	err := srv.c.BatchCallContext(res.Context(), blockReqs)
+	err := srv.C.BatchCallContext(res.Context(), blockReqs)
 	if err != nil {
 		return err
 	}
@@ -86,7 +91,7 @@ func (srv *TrxServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 			return blockReq.Error
 		}
 		blockRes := blockReq.Result.(*trxrpc.HeaderWithBody)
-		converter := &BlockConverter{Config: srv.config, Client: srv.c, Ctx: res.Context()}
+		converter := &BlockConverter{Config: &srv.Config, Client: srv.C, Ctx: res.Context()}
 		block, err := converter.EthBlockToProto(blockRes)
 		if err != nil {
 			slog.Error("Error converting block", "error", err)

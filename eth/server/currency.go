@@ -65,13 +65,13 @@ func (srv *EthServer) GetCurrency(ctx context.Context, req *services.GetCurrency
 		// native currency
 		return &proto.Currency{
 			Id:       req.Id,
-			Symbol:   srv.config.ChainType,
+			Symbol:   srv.Config.ChainType,
 			Decimals: ETH_DECIMALS,
 		}, nil
 	} else if currencyId.Token == "" {
 		// erc20 token
 		// retreive token info
-		tokenInst, err := erc20.NewErc20(common.HexToAddress(currencyId.Address), srv.c)
+		tokenInst, err := erc20.NewErc20(common.HexToAddress(currencyId.Address), srv.C)
 		if err != nil {
 			return nil, err
 		}

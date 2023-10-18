@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"ubt/agents/commons"
 
 	"github.com/ubtools/ubt/go/api/proto"
@@ -14,6 +15,7 @@ type IUbtAgentServer interface {
 	services.UbtBlockServiceServer
 	services.UbtConstructServiceServer
 	services.UbtCurrencyServiceServer
+	String() string
 }
 
 type ServerProxy struct {
@@ -41,8 +43,15 @@ func (s *ServerProxy) GetChain(ctx context.Context, in *proto.ChainId) (*proto.C
 }
 
 func (s *ServerProxy) ListChains(in *services.ListChainsRequest, srv services.UbtChainService_ListChainsServer) error {
-	//FIXME
-	return ErrChainNotSupported
+	for sn, downSrv := range s.servers {
+		slog.Debug("ss", "sn", sn, "downSrv", downSrv.String())
+		err := downSrv.ListChains(in, srv)
+		if err != nil {
+			slog.Debug("err", "err", err)
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *ServerProxy) GetBlock(ctx context.Context, in *services.BlockRequest) (*proto.Block, error) {

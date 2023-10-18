@@ -18,7 +18,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/ubtools/ubt/go/blockchain"
-	"github.com/ubtools/ubt/go/blockchain/eth"
 
 	"github.com/ubtools/ubt/go/api/proto"
 	"github.com/ubtools/ubt/go/api/proto/services"
@@ -29,10 +28,14 @@ type EthServer struct {
 	services.UnimplementedUbtBlockServiceServer
 	services.UnimplementedUbtConstructServiceServer
 	services.UnimplementedUbtCurrencyServiceServer
-	c       *client.RateLimitedClient
-	config  *config.ChainConfig
-	chain   blockchain.Blockchain
-	chainId *big.Int
+	C       *client.RateLimitedClient
+	Config  config.ChainConfig
+	Chain   blockchain.Blockchain
+	ChainId *big.Int
+}
+
+func (srv *EthServer) String() string {
+	return fmt.Sprintf("EthServer{%s:%s}", srv.Config.ChainType, srv.Config.ChainNetwork)
 }
 
 func InitServer(ctx context.Context, config *config.ChainConfig) *EthServer {
@@ -46,15 +49,15 @@ func InitServer(ctx context.Context, config *config.ChainConfig) *EthServer {
 		panic(err)
 	}
 	slog.Info("Connected", "chainId", chainId)
-	var srv = EthServer{c: client, config: config, chainId: chainId}
+	var srv = EthServer{C: client, Config: *config, ChainId: chainId}
 	return &srv
 }
 
 func (srv *EthServer) GetNetwork(ctx context.Context, netId *proto.ChainId) (*proto.Chain, error) {
-	if netId.Type != srv.chain.Type {
+	if netId.Type != srv.Chain.Type {
 		return nil, status.Errorf(codes.Unimplemented, "method GetNetwork not implemented")
 	}
-	id := uint32(srv.chain.TypeNum)
+	id := uint32(srv.Chain.TypeNum)
 	return &proto.Chain{
 		Id:              netId,
 		Bip44Id:         &id,
@@ -67,17 +70,19 @@ func (srv *EthServer) GetNetwork(ctx context.Context, netId *proto.ChainId) (*pr
 }
 
 func (srv *EthServer) ListChains(req *services.ListChainsRequest, s services.UbtChainService_ListChainsServer) error {
-	id := uint32(eth.CODE_NUM)
-	net := &proto.Chain{
-		Id:              &proto.ChainId{Type: eth.CODE_STR, Network: commons.MAINNET},
-		Bip44Id:         &id,
-		Testnet:         false,
+	chain := srv.Config
+	err := s.Send(&proto.Chain{
+		Id:              &proto.ChainId{Type: chain.ChainType, Network: chain.ChainNetwork},
+		Bip44Id:         nil, //srv.Chain.TypeNum,
+		Testnet:         chain.Testnet,
 		FinalizedHeight: 20,
 		MsPerBlock:      3000,
 		SupportedServices: []proto.Chain_ChainSupportedServices{
 			proto.Chain_BLOCK, proto.Chain_CONSTRUCT, proto.Chain_CURRENCIES},
+	})
+	if err != nil {
+		return err
 	}
-	s.Send(net)
 	return nil
 }
 
@@ -97,11 +102,11 @@ func toBlockNumArg(number *big.Int) string {
 }
 
 func (srv *EthServer) GetBlock(ctx context.Context, req *services.BlockRequest) (*proto.Block, error) {
-	_, err := srv.c.HeaderByHash(ctx, common.Hash(req.Id))
+	_, err := srv.C.HeaderByHash(ctx, common.Hash(req.Id))
 	if err != nil {
 		return nil, err
 	}
-	converter := &BlockConverter{Config: srv.config, Client: srv.c, Ctx: ctx}
+	converter := &BlockConverter{Config: &srv.Config, Client: srv.C, Ctx: ctx}
 	b, err := converter.EthBlockToProto(nil)
 	if err != nil {
 		return nil, err
@@ -127,7 +132,7 @@ func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 		})
 	}
 
-	err := srv.c.BatchCallContext(res.Context(), blockReqs)
+	err := srv.C.BatchCallContext(res.Context(), blockReqs)
 	if err != nil {
 		return err
 	}
@@ -135,12 +140,11 @@ func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 	slog.Debug(fmt.Sprintf("Got %d blocks\n", len(blockReqs)))
 
 	for _, blockReq := range blockReqs {
-		slog.Debug("Block:", "result", blockReq.Result, "error", blockReq.Error)
 		if blockReq.Error != nil {
 			return blockReq.Error
 		}
 		blockRes := blockReq.Result.(*HeaderWithBody)
-		converter := &BlockConverter{Config: srv.config, Client: srv.c, Ctx: res.Context()}
+		converter := &BlockConverter{Config: &srv.Config, Client: srv.C, Ctx: res.Context()}
 		block, err := converter.EthBlockToProto(blockRes)
 		if err != nil {
 			slog.Error("Error converting block", "error", err)
@@ -177,17 +181,17 @@ type TronNodeInfo struct {
 func (srv *EthServer) Test(ctx context.Context) {
 	var nodeInfo = TronNodeInfo{}
 
-	srv.c.Client.Client().CallContext(ctx, &nodeInfo.Version, "web3_clientVersion")
+	srv.C.Client.Client().CallContext(ctx, &nodeInfo.Version, "web3_clientVersion")
 
-	srv.c.Client.Client().CallContext(ctx, &nodeInfo.Listening, "net_listening")
+	srv.C.Client.Client().CallContext(ctx, &nodeInfo.Listening, "net_listening")
 
-	srv.c.Client.Client().CallContext(ctx, &nodeInfo.SyncInfo, "eth_syncing")
+	srv.C.Client.Client().CallContext(ctx, &nodeInfo.SyncInfo, "eth_syncing")
 
-	srv.c.Client.Client().CallContext(ctx, &(nodeInfo.ChainId), "eth_chainId")
+	srv.C.Client.Client().CallContext(ctx, &(nodeInfo.ChainId), "eth_chainId")
 
-	srv.c.Client.Client().CallContext(ctx, &nodeInfo.PeerCount, "net_peerCount")
+	srv.C.Client.Client().CallContext(ctx, &nodeInfo.PeerCount, "net_peerCount")
 
-	srv.c.Client.Client().CallContext(ctx, &nodeInfo.GenesisBlockHash, "net_version")
+	srv.C.Client.Client().CallContext(ctx, &nodeInfo.GenesisBlockHash, "net_version")
 
 	var nodeInfoJson, _ = json.Marshal(nodeInfo)
 
@@ -197,17 +201,17 @@ func (srv *EthServer) Test(ctx context.Context) {
 func (srv *EthServer) Test2(ctx context.Context) {
 	var nodeInfo = TronNodeInfo{}
 
-	srv.c.Client.Client().CallContext(ctx, &nodeInfo.Version, "web3_clientVersion")
+	srv.C.Client.Client().CallContext(ctx, &nodeInfo.Version, "web3_clientVersion")
 
-	srv.c.Client.Client().CallContext(ctx, &nodeInfo.Listening, "net_listening")
+	srv.C.Client.Client().CallContext(ctx, &nodeInfo.Listening, "net_listening")
 
-	srv.c.Client.Client().CallContext(ctx, &nodeInfo.SyncInfo, "eth_syncing")
+	srv.C.Client.Client().CallContext(ctx, &nodeInfo.SyncInfo, "eth_syncing")
 
-	srv.c.Client.Client().CallContext(ctx, &(nodeInfo.ChainId), "eth_chainId")
+	srv.C.Client.Client().CallContext(ctx, &(nodeInfo.ChainId), "eth_chainId")
 
-	srv.c.Client.Client().CallContext(ctx, &nodeInfo.PeerCount, "net_peerCount")
+	srv.C.Client.Client().CallContext(ctx, &nodeInfo.PeerCount, "net_peerCount")
 
-	srv.c.Client.Client().CallContext(ctx, &nodeInfo.GenesisBlockHash, "net_version")
+	srv.C.Client.Client().CallContext(ctx, &nodeInfo.GenesisBlockHash, "net_version")
 
 	var nodeInfoJson, _ = json.Marshal(nodeInfo)
 
