@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ubt-am
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "ubtam.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas | default 1}}
+  selector:
+    matchLabels: {{ include "ubtam.matchLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{ include "ubtam.labels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ .Values | toJson | sha256sum }}
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: ubt-config
+      containers:
+      - name: ubt-am
+        image: {{ template "ubtam.image" . }}
+        imagePullPolicy: {{ .Values.am.image.pullPolicy | default "IfNotPresent" | quote }}
+        env:
+        - name: DEBUG
+          value: {{ .Values.debug | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.logLevel | default "info" | quote }}
+        - name: GRPC_TRACE
+          value: {{ .Values.grpcTrace | default "" | quote }}
+        - name: GRPC_VERBOSITY
+          value: {{ .Values.grpcVerbosity | default "" | quote }}
+        ports:
+        - containerPort: 50051

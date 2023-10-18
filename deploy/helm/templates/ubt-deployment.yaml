@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ubt
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "ubt.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas | default 1}}
+  selector:
+    matchLabels: {{ include "ubt.matchLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{ include "ubt.labels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ .Values | toJson | sha256sum }}
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: ubt-config
+      containers:
+      - name: ubt
+        image: {{ template "ubt.image" . }}
+        imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" | quote }}
+        env:
+        - name: DEBUG
+          value: {{ .Values.debug | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.logLevel | default "info" | quote }}
+        - name: GRPC_TRACE
+          value: {{ .Values.grpcTrace | default "" | quote }}
+        - name: GRPC_VERBOSITY
+          value: {{ .Values.grpcVerbosity | default "" | quote }}
+        volumeMounts:
+          - name: config-volume
+            mountPath: /app/packages/srv-tron/config
+            readOnly: true
+        ports:
+        - containerPort: 50051

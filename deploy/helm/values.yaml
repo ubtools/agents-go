@@ -1,0 +1,40 @@
+replicas: 1
+image:
+  registry: ubtools
+  repository: agent-eth
+  tag: "0.2.0"
+  pullPolicy: "IfNotPresent"
+am:
+  image:
+    registry: ubtools
+    repository: am-db
+    tag: "0.2.0"
+    pullPolicy: "IfNotPresent"
+logLevel: "INFO"
+chains:
+  ETH:
+    defaultNetwork: SEPOLIA
+    networks:
+      SEPOLIA:
+        testnet: true
+        rpcUrl: https://rpc-sepolia.rockx.com
+      GOERLI:
+        testnet: true
+        rpcUrl: https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161	
+  TRX:
+    defaultNetwork: NILE
+    networks:
+      NILE:
+        testnet: true
+        limitPerSec: 30
+        rpcUrl: https://nile.trongrid.io/jsonrpc
+  BNB:
+    defaultNetwork: TESTNET
+    networks:
+      TESTNET:
+        testnet: true
+        rpcUrl: https://rpc.ankr.com/bsc_testnet_chapel/c4edfff08323d5dd4c22c84f688176debec7a3ddcd6319751e8626f77a81e1b9
+      MAINNET:
+        testnet: false
+        rpcUrl: https://rpc.ankr.com/bsc/c4edfff08323d5dd4c22c84f688176debec7a3ddcd6319751e8626f77a81e1b9
+
