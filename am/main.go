@@ -62,10 +62,10 @@ func main() {
 			if err != nil {
 				log.Fatalf("failed to listen: %v", err)
 			}
-			tronSrv := initAMServier(cCtx.String("db"))
+			srv := initAMServier(cCtx.String("db"))
 
 			s := grpc.NewServer()
-			ubt_am.RegisterUbtAccountManagerServer(s, tronSrv)
+			ubt_am.RegisterUbtAccountManagerServer(s, srv)
 			log.Printf("server listening at %v", lis.Addr())
 
 			if err := s.Serve(lis); err != nil {

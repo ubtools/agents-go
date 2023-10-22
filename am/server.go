@@ -4,9 +4,10 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
-	ubt_am "ubt/api/proto/services/am"
 
-	"ubt/blockchain"
+	ubt_am "github.com/ubtools/ubt/go/api/proto/services/am"
+
+	"github.com/ubtools/ubt/go/blockchain"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"

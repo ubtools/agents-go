@@ -1,9 +1,10 @@
-module github.com/ubtools/am
+module github.com/ubtools/agents-go/am
 
 go 1.21.1
 
 require (
 	github.com/glebarez/sqlite v1.9.0
+	github.com/ubtools/ubt/go v0.0.5
 	github.com/urfave/cli/v2 v2.25.7
 	google.golang.org/grpc v1.58.2
 	gorm.io/gorm v1.25.4
