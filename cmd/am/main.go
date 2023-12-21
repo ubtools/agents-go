@@ -9,6 +9,10 @@ import (
 
 	ubt_am "github.com/ubtools/ubt/go/api/proto/services/am"
 
+	_ "github.com/ubtools/ubt/go/blockchain"
+
+	am "ubt/agents/am"
+
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 )
@@ -31,8 +35,8 @@ func slogLevelFromString(lvl string) (programLevel slog.Level) {
 
 func main() {
 	app := &cli.App{
-		Name:            "ubt-am-hsm",
-		Usage:           "UBT Account Manager (HSM)",
+		Name:            "ubt-am",
+		Usage:           "UBT Account Manager",
 		HideHelpCommand: true,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
@@ -60,8 +64,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("failed to listen: %v", err)
 			}
-			srv := InitAMPKCSServer(Config{})
-			defer srv.Close()
+			srv := am.InitAMServier(cCtx.String("db"))
 
 			s := grpc.NewServer()
 			ubt_am.RegisterUbtAccountManagerServer(s, srv)

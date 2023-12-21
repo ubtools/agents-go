@@ -1,4 +1,4 @@
-package main
+package am
 
 import (
 	"context"
@@ -20,7 +20,7 @@ type Account struct {
 	PK          []byte
 }
 
-func initAMServier(dsn string) *AMServer {
+func InitAMServier(dsn string) *AMServer {
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic(err)

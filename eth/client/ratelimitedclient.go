@@ -32,6 +32,20 @@ func (c *RateLimitedClient) BatchCallContext(ctx context.Context, batch []rpc.Ba
 	return err
 }
 
+func (c *RateLimitedClient) CallContext(ctx context.Context, result interface{}, method string, args ...interface{}) error {
+	if err := c.Limiter.Wait(ctx); err != nil {
+		return err
+	}
+	if slog.Default().Enabled(ctx, slog.LevelDebug) {
+		slog.Debug("Request", "method", method, "args", args)
+	}
+	err := c.Client.Client().CallContext(ctx, result, method, args...)
+	if slog.Default().Enabled(ctx, slog.LevelDebug) {
+		slog.Debug("Response", "method", method, "result", result, "error", err)
+	}
+	return err
+}
+
 func DialContext(ctx context.Context, url string, limitRps float64) (*RateLimitedClient, error) {
 	actualLimitRps := rate.Limit(limitRps)
 	if limitRps == 0 {

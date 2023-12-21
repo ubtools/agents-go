@@ -1,4 +1,4 @@
-package main
+package pkcs
 
 import (
 	"context"
@@ -86,6 +86,10 @@ func (s *AMPKCSServer) SignPayload(ctx context.Context, req *ubt_am.SignPayloadR
 	if err != nil {
 		return nil, err
 	}
-	signer.Sign(s.pkcsCtx.NewRandomReader())
+	randReader, err := s.pkcsCtx.NewRandomReader()
+	if err != nil {
+		return nil, err
+	}
+	signer.Sign(randReader, req.Data, nil)
 	return nil, status.Errorf(codes.Unimplemented, "method SignPayload not implemented")
 }

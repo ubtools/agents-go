@@ -7,4 +7,4 @@ Code for ubt written in Golang
 ## Account manager
 Implementation of UbtAccountManagerService
 - am - implementation using soft encryption and db as storage
-- am-pkcs - implementation using PKCS11
+- pkcs - implementation using PKCS11

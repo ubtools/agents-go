@@ -2,13 +2,13 @@
 version: '3'
 services:
   agent-eth:
-    image: 'ubtools/agent-eth:${UBT_AGENTS_VERSION}'
+    image: 'ubtr/agent-eth:${UBT_AGENTS_VERSION}'
     ports:
       - '50051:50051'
     volumes:
       - './config.yml:/config.yml'
     command: ['--config', '/config.yml', '--log', 'DEBUG', "-r"]
   am:
-    image: 'ubtools/am-db:${UBT_AGENTS_VERSION}'
+    image: 'ubtr/am-db:${UBT_AGENTS_VERSION}'
     ports:
       - '50052:50052'

@@ -21,6 +21,8 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
+
+	ethereum_log "github.com/ethereum/go-ethereum/log"
 )
 
 func slogLevelFromString(lvl string) (programLevel slog.Level) {
@@ -92,8 +94,14 @@ func main() {
 		},
 		Action: func(cCtx *cli.Context) error {
 			var lvl = slogLevelFromString(cCtx.String("log"))
-			h := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: lvl})
+			h := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{AddSource: lvl == slog.LevelDebug, Level: lvl})
 			slog.SetDefault(slog.New(h))
+
+			//specific(ethereum)
+			if lvl == slog.LevelDebug {
+				ethereum_log.Root().SetHandler(ethereum_log.StreamHandler(os.Stdout, ethereum_log.LogfmtFormat()))
+			}
+			//end
 
 			lis, err := net.Listen("tcp", cCtx.String("listen"))
 			if err != nil {

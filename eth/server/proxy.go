@@ -33,9 +33,14 @@ func InitServerProxy(servers map[string]IUbtAgentServer) *ServerProxy {
 }
 
 var ErrChainNotSupported = errors.New("chain not supported")
+var ErrChainIdRequired = errors.New("chain id is required")
 
 func (s *ServerProxy) GetChain(ctx context.Context, in *proto.ChainId) (*proto.Chain, error) {
+	if in == nil {
+		return nil, ErrChainIdRequired
+	}
 	chainId := commons.ChainIdToString(in)
+	slog.Debug("GetChain", "chainId", chainId)
 	if srv, ok := s.servers[chainId]; ok {
 		return srv.GetChain(ctx, in)
 	}
@@ -55,6 +60,9 @@ func (s *ServerProxy) ListChains(in *services.ListChainsRequest, srv services.Ub
 }
 
 func (s *ServerProxy) GetBlock(ctx context.Context, in *services.BlockRequest) (*proto.Block, error) {
+	if in.ChainId == nil {
+		return nil, ErrChainIdRequired
+	}
 	chainId := commons.ChainIdToString(in.ChainId)
 	if srv, ok := s.servers[chainId]; ok {
 		return srv.GetBlock(ctx, in)
@@ -63,14 +71,22 @@ func (s *ServerProxy) GetBlock(ctx context.Context, in *services.BlockRequest) (
 }
 
 func (s *ServerProxy) ListBlocks(in *services.ListBlocksRequest, res services.UbtBlockService_ListBlocksServer) error {
+	if in.ChainId == nil {
+		return ErrChainIdRequired
+	}
 	chainId := commons.ChainIdToString(in.ChainId)
+	slog.Debug("ListBlocks", "chainId", chainId)
 	if srv, ok := s.servers[chainId]; ok {
+		slog.Debug("ListBlocks", "server", srv.String())
 		return srv.ListBlocks(in, res)
 	}
 	return ErrChainNotSupported
 }
 
 func (s *ServerProxy) GetAccount(ctx context.Context, in *services.GetAccountRequest) (*proto.Account, error) {
+	if in.ChainId == nil {
+		return nil, ErrChainIdRequired
+	}
 	chainId := commons.ChainIdToString(in.ChainId)
 	if srv, ok := s.servers[chainId]; ok {
 		return srv.GetAccount(ctx, in)
@@ -79,6 +95,9 @@ func (s *ServerProxy) GetAccount(ctx context.Context, in *services.GetAccountReq
 }
 
 func (s *ServerProxy) DeriveAccount(ctx context.Context, in *services.DeriveAccountRequest) (*proto.Account, error) {
+	if in.ChainId == nil {
+		return nil, ErrChainIdRequired
+	}
 	chainId := commons.ChainIdToString(in.ChainId)
 	if srv, ok := s.servers[chainId]; ok {
 		return srv.DeriveAccount(ctx, in)
@@ -87,6 +106,9 @@ func (s *ServerProxy) DeriveAccount(ctx context.Context, in *services.DeriveAcco
 }
 
 func (s *ServerProxy) GetCurrency(ctx context.Context, in *services.GetCurrencyRequest) (*proto.Currency, error) {
+	if in.ChainId == nil {
+		return nil, ErrChainIdRequired
+	}
 	chainId := commons.ChainIdToString(in.ChainId)
 	if srv, ok := s.servers[chainId]; ok {
 		return srv.GetCurrency(ctx, in)
@@ -95,6 +117,9 @@ func (s *ServerProxy) GetCurrency(ctx context.Context, in *services.GetCurrencyR
 }
 
 func (s *ServerProxy) CreateTransfer(ctx context.Context, in *services.CreateTransferRequest) (*services.TransactionIntent, error) {
+	if in.ChainId == nil {
+		return nil, ErrChainIdRequired
+	}
 	chainId := commons.ChainIdToString(in.ChainId)
 	if srv, ok := s.servers[chainId]; ok {
 		return srv.CreateTransfer(ctx, in)
@@ -103,6 +128,9 @@ func (s *ServerProxy) CreateTransfer(ctx context.Context, in *services.CreateTra
 }
 
 func (s *ServerProxy) CombineTransaction(ctx context.Context, in *services.TransactionCombineRequest) (*services.SignedTransaction, error) {
+	if in.ChainId == nil {
+		return nil, ErrChainIdRequired
+	}
 	chainId := commons.ChainIdToString(in.ChainId)
 	if srv, ok := s.servers[chainId]; ok {
 		return srv.CombineTransaction(ctx, in)
@@ -111,6 +139,9 @@ func (s *ServerProxy) CombineTransaction(ctx context.Context, in *services.Trans
 }
 
 func (s *ServerProxy) Send(ctx context.Context, in *services.TransactionSendRequest) (*services.TransactionSendResponse, error) {
+	if in.ChainId == nil {
+		return nil, ErrChainIdRequired
+	}
 	chainId := commons.ChainIdToString(in.ChainId)
 	if srv, ok := s.servers[chainId]; ok {
 		return srv.Send(ctx, in)
@@ -119,6 +150,9 @@ func (s *ServerProxy) Send(ctx context.Context, in *services.TransactionSendRequ
 }
 
 func (s *ServerProxy) SignTransaction(ctx context.Context, in *services.TransactionSignRequest) (*services.SignedTransaction, error) {
+	if in.ChainId == nil {
+		return nil, ErrChainIdRequired
+	}
 	chainId := commons.ChainIdToString(in.ChainId)
 	if srv, ok := s.servers[chainId]; ok {
 		return srv.SignTransaction(ctx, in)

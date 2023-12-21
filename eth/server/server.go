@@ -48,18 +48,23 @@ func InitServer(ctx context.Context, config *config.ChainConfig) *EthServer {
 	if err != nil {
 		panic(err)
 	}
+	blockchain := blockchain.GetBlockchain(config.ChainType)
+	if blockchain == nil {
+		panic(fmt.Sprintf("Unsupported chain type '%s'", config.ChainType))
+	}
 	slog.Info("Connected", "chainId", chainId)
-	var srv = EthServer{C: client, Config: *config, ChainId: chainId}
+	var srv = EthServer{C: client, Config: *config, ChainId: chainId, Chain: *blockchain}
 	return &srv
 }
 
-func (srv *EthServer) GetNetwork(ctx context.Context, netId *proto.ChainId) (*proto.Chain, error) {
-	if netId.Type != srv.Chain.Type {
-		return nil, status.Errorf(codes.Unimplemented, "method GetNetwork not implemented")
+func (srv *EthServer) GetChain(ctx context.Context, chainId *proto.ChainId) (*proto.Chain, error) {
+	slog.Debug("GetChain", "chainId.type", chainId.Type, "srv.Chain.Type", srv.Chain.Type)
+	if chainId.Type != srv.Chain.Type {
+		return nil, status.Errorf(codes.Unimplemented, "method GetChain not implemented")
 	}
 	id := uint32(srv.Chain.TypeNum)
 	return &proto.Chain{
-		Id:              netId,
+		Id:              chainId,
 		Bip44Id:         &id,
 		Testnet:         false,
 		FinalizedHeight: 20,
@@ -70,6 +75,9 @@ func (srv *EthServer) GetNetwork(ctx context.Context, netId *proto.ChainId) (*pr
 }
 
 func (srv *EthServer) ListChains(req *services.ListChainsRequest, s services.UbtChainService_ListChainsServer) error {
+	if req.Type != nil && *req.Type != srv.Chain.Type {
+		return nil
+	}
 	chain := srv.Config
 	err := s.Send(&proto.Chain{
 		Id:              &proto.ChainId{Type: chain.ChainType, Network: chain.ChainNetwork},
@@ -117,6 +125,15 @@ func (srv *EthServer) GetBlock(ctx context.Context, req *services.BlockRequest) 
 
 func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.UbtBlockService_ListBlocksServer) error {
 	slog.Debug(fmt.Sprintf("ListBlocks from %d, count = %v\n", req.StartNumber, req.Count))
+
+	// get top block number
+	var topBlockNumberStr string
+	err := srv.C.CallContext(res.Context(), &topBlockNumberStr, "eth_blockNumber")
+	if err != nil {
+		return err
+	}
+	topBlockNumber := hexutil.MustDecodeUint64(topBlockNumberStr)
+
 	blockReqs := []rpc.BatchElem{}
 	var endNumber uint64 = 0
 	if (req.Count == nil) || (*req.Count == 0) {
@@ -124,6 +141,9 @@ func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 	} else {
 		endNumber = req.StartNumber + *req.Count
 	}
+	endNumber = min(endNumber, topBlockNumber+1)
+	slog.Debug("endNumber", "endNumber", endNumber)
+
 	for i := req.StartNumber; i < endNumber; i++ {
 		blockReqs = append(blockReqs, rpc.BatchElem{
 			Method: "eth_getBlockByNumber",
@@ -132,7 +152,7 @@ func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 		})
 	}
 
-	err := srv.C.BatchCallContext(res.Context(), blockReqs)
+	err = srv.C.BatchCallContext(res.Context(), blockReqs)
 	if err != nil {
 		return err
 	}
