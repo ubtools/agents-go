@@ -6,14 +6,15 @@ import (
 	"log/slog"
 	"strings"
 	"time"
-	"ubt/agents/eth/client"
-	"ubt/agents/eth/config"
-	trxrpc "ubt/agents/trx/rpc"
+
+	"github.com/ubtr/ubt-go/eth/client"
+	"github.com/ubtr/ubt-go/eth/config"
+	trxrpc "github.com/ubtr/ubt-go/trx/rpc"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ubtools/ubt/go/api/proto"
+	"github.com/ubtr/ubt/go/api/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

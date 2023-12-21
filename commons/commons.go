@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ubtools/ubt/go/api/proto"
+	"github.com/ubtr/ubt/go/api/proto"
 )
 
 func Hex2Int(hexStr string) (uint64, error) {

@@ -7,8 +7,8 @@ import (
 
 	"github.com/ThalesIgnite/crypto11"
 	"github.com/ethereum/go-ethereum/crypto"
-	ubt_am "github.com/ubtools/ubt/go/api/proto/services/am"
-	"github.com/ubtools/ubt/go/blockchain/eth"
+	"github.com/ubtr/ubt-go/blockchain/eth"
+	ubt_am "github.com/ubtr/ubt/go/api/proto/services/am"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

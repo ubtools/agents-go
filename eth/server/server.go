@@ -7,9 +7,10 @@ import (
 	"log"
 	"log/slog"
 	"math/big"
-	"ubt/agents/commons"
-	"ubt/agents/eth/client"
-	"ubt/agents/eth/config"
+
+	"github.com/ubtr/ubt-go/commons"
+	"github.com/ubtr/ubt-go/eth/client"
+	"github.com/ubtr/ubt-go/eth/config"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -17,10 +18,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/ubtools/ubt/go/blockchain"
+	"github.com/ubtr/ubt-go/blockchain"
 
-	"github.com/ubtools/ubt/go/api/proto"
-	"github.com/ubtools/ubt/go/api/proto/services"
+	"github.com/ubtr/ubt/go/api/proto"
+	"github.com/ubtr/ubt/go/api/proto/services"
 )
 
 type EthServer struct {

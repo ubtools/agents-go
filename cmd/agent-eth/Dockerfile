@@ -1,13 +1,16 @@
-FROM golang:1.21 as build
+FROM golang:1.21-alpine3.18 as build
 
 ADD ./ /work
-WORKDIR /work
-RUN cd /work/cmd/agent-eth && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build
+WORKDIR /work/cmd/agent-eth
+RUN go mod download
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build
 
-FROM alpine:3.14
+FROM alpine:3.18
 
 RUN apk add --no-cache ca-certificates
 
 COPY --from=build /work/cmd/agent-eth/agent-eth /usr/local/bin/agent-eth
+COPY --from=build /work/cmd/agent-eth/config.default.yaml /etc/agent-eth/config.yaml
 
 ENTRYPOINT ["/usr/local/bin/agent-eth"]
+CMD ["-c", "/etc/agent-eth/config.yaml"]

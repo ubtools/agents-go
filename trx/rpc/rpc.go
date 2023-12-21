@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	trxcommon "ubt/agents/trx/common"
+	trxcommon "github.com/ubtr/ubt-go/trx/common"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"

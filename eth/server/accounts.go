@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 
-	"github.com/ubtools/ubt/go/api/proto"
-	"github.com/ubtools/ubt/go/api/proto/services"
+	"github.com/ubtr/ubt/go/api/proto"
+	"github.com/ubtr/ubt/go/api/proto/services"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

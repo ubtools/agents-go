@@ -12,7 +12,7 @@ import { arrayFromAsync } from "../scripts/utils";
 import { RpcError } from "@protobuf-ts/runtime-rpc";
 
 import debug from "debug"
-import { CurrencyId, FinalityStatus, ListBlocksRequest_IncludeFlags, hexutils, uint256, uint256utils } from "@ubtr/sdk";
+import { Block, CurrencyId, FinalityStatus, ListBlocksRequest_IncludeFlags, hexutils, uint256, uint256utils } from "@ubtr/sdk";
 const log = debug("ubt:test:BlockService")
 
 let agent: UbtAgent;
@@ -66,6 +66,8 @@ describe("BlockService", () => {
     log(blocks)
     log("Block timestamp", new Date(new Number(blocks[0].header?.timestamp?.seconds).valueOf() * 1000))
     expect(blocks.length).eq(2);
+    Block
+    expect(blocks[0]).to.deep.include({})
     expect(blocks[0].header?.number).eq(0n);
     expect(blocks[0].transactions.length).eq(0); // genesis block has no transactions
     expect(blocks[1].header?.number).eq(1n);
@@ -74,6 +76,32 @@ describe("BlockService", () => {
     expect(tx.from).eq(getAddress(f.owner.account.address))
     expect(tx.to).eq("")
     expect(tx.transfers.length).eq(1)
+    // validate mint transfer
+    const mintTr = tx.transfers[0]
+    expect(mintTr.from).eq("0x0000000000000000000000000000000000000000")
+    expect(mintTr.to).eq(getAddress(f.owner.account.address))
+    expect(mintTr.amount?.currencyId).eq(`ETH:SEPOLIA:${getAddress(f.token.address)}`)
+    expect(uint256utils.toBigInt(mintTr.amount?.value!)).eq(f.ownerBalance)
+    log(JSON.stringify(blocks[1].transactions[0]))
+  });
+
+  it("Should return block by id", async () => {
+    const f = await loadFixture(deployTestERC20Token)
+    const blocks = await arrayFromAsync(client.blockService().listBlocks({chainId: {type: "ETH", network: "SEPOLIA"},
+      startNumber: 0n, finalityStatus: FinalityStatus.UNSPECIFIED, includes: ListBlocksRequest_IncludeFlags.FULL as number, count: 2n}).responses);
+   
+    log(blocks)
+    log("Block timestamp", new Date(new Number(blocks[0].header?.timestamp?.seconds).valueOf() * 1000))
+    expect(blocks.length).eq(2);
+
+    expect(blocks[0].header?.number).eq(0n);
+    expect(blocks[0].transactions.length).eq(0); // genesis block has no transactions
+    expect(blocks[1].header?.number).eq(1n);
+    expect(blocks[1].transactions.length).eq(1); // contract deployment
+    const tx = blocks[1].transactions[0]
+    expect(tx.from).eq(getAddress(f.owner.account.address))
+    expect(tx.to).eq("")
+    expect(tx.transfers.length).to.eq(1)
     // validate mint transfer
     const mintTr = tx.transfers[0]
     expect(mintTr.from).eq("0x0000000000000000000000000000000000000000")

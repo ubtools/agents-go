@@ -3,11 +3,12 @@ package server
 import (
 	"context"
 	"strings"
-	"ubt/agents/eth/contracts/erc20"
+
+	"github.com/ubtr/ubt-go/eth/contracts/erc20"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ubtools/ubt/go/api/proto"
-	"github.com/ubtools/ubt/go/api/proto/services"
+	"github.com/ubtr/ubt/go/api/proto"
+	"github.com/ubtr/ubt/go/api/proto/services"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

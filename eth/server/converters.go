@@ -6,14 +6,15 @@ import (
 	"log"
 	"strings"
 	"time"
-	"ubt/agents/eth/client"
-	"ubt/agents/eth/config"
+
+	"github.com/ubtr/ubt-go/eth/client"
+	"github.com/ubtr/ubt-go/eth/config"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ubtools/ubt/go/api/proto"
+	"github.com/ubtr/ubt/go/api/proto"
 	"golang.org/x/exp/slog"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

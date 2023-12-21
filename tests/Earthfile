@@ -1,0 +1,9 @@
+VERSION 0.7
+
+test:
+  FROM node:18.16.1-alpine3.19
+  RUN apk add --no-cache go
+  COPY .. /work
+  WORKDIR /work/tests
+  RUN npm install
+  RUN npm test

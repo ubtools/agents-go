@@ -1,13 +1,15 @@
-FROM golang:1.21 as build
+FROM golang:1.21-alpine3.18 as build
 
+RUN apk add --no-cache gcc musl-dev
 ADD ./ /work
-WORKDIR /work
-RUN cd /work/am-pkcs && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o /work/am-pkcs/am-pkcs
+WORKDIR /work/cmd/am-pkcs
+RUN go mod download
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build
 
-FROM alpine:3.14
+FROM alpine:3.18
 
 RUN apk add --no-cache ca-certificates
 
-COPY --from=build /work/am-pkcs/am-pkcs /usr/local/bin/am-pkcs
+COPY --from=build /work/cmd/am-pkcs/am-pkcs /usr/local/bin/am-pkcs
 
 ENTRYPOINT ["/usr/local/bin/am-pkcs"]

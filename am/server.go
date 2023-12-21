@@ -5,9 +5,9 @@ import (
 	"crypto/rand"
 	"errors"
 
-	ubt_am "github.com/ubtools/ubt/go/api/proto/services/am"
+	ubt_am "github.com/ubtr/ubt/go/api/proto/services/am"
 
-	"github.com/ubtools/ubt/go/blockchain"
+	"github.com/ubtr/ubt-go/blockchain"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
@@ -42,7 +42,7 @@ func (s *AMServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAccountR
 	if bc == nil {
 		return nil, errors.New("NO SUCH NETWORK")
 	}
-	kp, err := bc.KeyGenerator(rand.Reader)
+	kp, err := bc.GenerateAccount(rand.Reader)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (s *AMServer) SignPayload(ctx context.Context, req *ubt_am.SignPayloadReque
 		}
 	}
 
-	signature, err := bc.Signer(req.Data, account.PK)
+	signature, err := bc.Sign(req.Data, account.PK)
 
 	return &ubt_am.SignPayloadResponse{Signature: signature}, err
 }

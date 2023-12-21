@@ -17,9 +17,6 @@ chains:
     networks:
       TESTNET:
         testnet: true
-        rpcUrl: https://rpc.ankr.com/bsc_testnet_chapel/c4edfff08323d5dd4c22c84f688176debec7a3ddcd6319751e8626f77a81e1b9
-      MAINNET:
-        testnet: false
-        rpcUrl: https://rpc.ankr.com/bsc/c4edfff08323d5dd4c22c84f688176debec7a3ddcd6319751e8626f77a81e1b9
+        rpcUrl: https://rpc.ankr.com/bsc_testnet_chapel
 
 

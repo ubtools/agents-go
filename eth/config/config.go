@@ -2,7 +2,8 @@ package config
 
 import (
 	"os"
-	"ubt/agents/commons"
+
+	"github.com/ubtr/ubt-go/commons"
 
 	yaml "gopkg.in/yaml.v3"
 )

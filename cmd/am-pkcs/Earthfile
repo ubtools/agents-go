@@ -1,0 +1,6 @@
+VERSION 0.7
+
+build:
+  ARG tag=latest
+  FROM DOCKERFILE -f ./Dockerfile ../../
+  SAVE IMAGE --push ubtr/am-pkcs:$tag

@@ -29,7 +29,7 @@ import (
 	"strconv"
 	"strings"
 
-	trxhexutil "ubt/agents/trx/common/hexutil"
+	trxhexutil "github.com/ubtr/ubt-go/trx/common/hexutil"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"

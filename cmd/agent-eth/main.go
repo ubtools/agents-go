@@ -13,11 +13,15 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"ubt/agents/eth/config"
-	"ubt/agents/eth/server"
-	"ubt/agents/trx"
+	"github.com/ubtr/ubt-go/blockchain"
+	_ "github.com/ubtr/ubt-go/blockchain/bnb"
+	_ "github.com/ubtr/ubt-go/blockchain/eth"
+	_ "github.com/ubtr/ubt-go/blockchain/trx"
+	"github.com/ubtr/ubt-go/eth/config"
+	"github.com/ubtr/ubt-go/eth/server"
+	"github.com/ubtr/ubt-go/trx"
 
-	"github.com/ubtools/ubt/go/api/proto/services"
+	"github.com/ubtr/ubt/go/api/proto/services"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
@@ -103,6 +107,12 @@ func main() {
 			}
 			//end
 
+			supportedChains := []string{}
+			for k := range blockchain.Blockchains {
+				supportedChains = append(supportedChains, k)
+			}
+			slog.Debug("Supported chains", "chains", supportedChains)
+
 			lis, err := net.Listen("tcp", cCtx.String("listen"))
 			if err != nil {
 				log.Fatalf("failed to listen: %v", err)
@@ -135,7 +145,6 @@ func main() {
 			services.RegisterUbtConstructServiceServer(s, srv)
 
 			if cCtx.Bool("reflection") {
-				// enable reflection
 				slog.Info("Enabling gRPC reflection")
 				reflection.Register(s)
 			}

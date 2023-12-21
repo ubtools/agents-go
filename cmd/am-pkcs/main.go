@@ -9,11 +9,11 @@ import (
 	"os"
 	"strings"
 
-	am_pkcs "ubt/agents/pkcs"
+	am_pkcs "github.com/ubtr/ubt-go/pkcs"
 
 	"github.com/ThalesIgnite/crypto11"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
-	ubt_am "github.com/ubtools/ubt/go/api/proto/services/am"
+	ubt_am "github.com/ubtr/ubt/go/api/proto/services/am"
 
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"

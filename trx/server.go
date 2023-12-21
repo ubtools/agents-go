@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"log/slog"
 	"math/big"
-	"ubt/agents/eth/client"
-	"ubt/agents/eth/config"
-	"ubt/agents/eth/server"
-	trxrpc "ubt/agents/trx/rpc"
+
+	"github.com/ubtr/ubt-go/eth/client"
+	"github.com/ubtr/ubt-go/eth/config"
+	"github.com/ubtr/ubt-go/eth/server"
+	trxrpc "github.com/ubtr/ubt-go/trx/rpc"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/ubtools/ubt/go/api/proto/services"
+	"github.com/ubtr/ubt/go/api/proto/services"
 )
 
 type TrxServer struct {

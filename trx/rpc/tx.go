@@ -4,8 +4,8 @@ import (
 	"errors"
 	"math/big"
 
-	trxcommon "ubt/agents/trx/common"
-	trxhexutil "ubt/agents/trx/common/hexutil"
+	trxcommon "github.com/ubtr/ubt-go/trx/common"
+	trxhexutil "github.com/ubtr/ubt-go/trx/common/hexutil"
 
 	"github.com/ethereum/go-ethereum/core/types"
 )

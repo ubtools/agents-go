@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"ubt/agents/commons"
 
-	"github.com/ubtools/ubt/go/api/proto"
-	"github.com/ubtools/ubt/go/api/proto/services"
+	"github.com/ubtr/ubt-go/commons"
+
+	"github.com/ubtr/ubt/go/api/proto"
+	"github.com/ubtr/ubt/go/api/proto/services"
 )
 
 type IUbtAgentServer interface {

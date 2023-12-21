@@ -1,4 +1,4 @@
-module ubt/agents
+module github.com/ubtr/ubt-go
 
 go 1.21.1
 
@@ -7,7 +7,7 @@ require (
 	github.com/ethereum/go-ethereum v1.13.2
 	github.com/glebarez/sqlite v1.10.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
-	github.com/ubtools/ubt/go v0.0.5
+	github.com/ubtr/ubt/go v0.0.7
 	github.com/urfave/cli/v2 v2.25.7
 	golang.org/x/time v0.3.0
 	google.golang.org/grpc v1.58.2
@@ -51,6 +51,7 @@ require (
 	github.com/holiman/uint256 v1.2.3 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/shengdoushi/base58 v1.0.0
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/supranational/blst v0.3.11 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect

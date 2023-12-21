@@ -1,13 +1,14 @@
-FROM golang:1.21 as build
+FROM golang:1.21-alpine3.18 as build
 
 ADD ./ /work
-WORKDIR /work
-RUN cd /work/am && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o /work/am/am
+WORKDIR /work/cmd/am
+RUN go mod download
+RUN GOOS=linux GOARCH=amd64 go build
 
-FROM alpine:3.14
+FROM alpine:3.18
 
 RUN apk add --no-cache ca-certificates
 
-COPY --from=build /work/am/am /usr/local/bin/am
+COPY --from=build /work/cmd/am/am /usr/local/bin/am
 
 ENTRYPOINT ["/usr/local/bin/am"]

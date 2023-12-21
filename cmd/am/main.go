@@ -7,11 +7,11 @@ import (
 	"os"
 	"strings"
 
-	ubt_am "github.com/ubtools/ubt/go/api/proto/services/am"
+	ubt_am "github.com/ubtr/ubt/go/api/proto/services/am"
 
-	_ "github.com/ubtools/ubt/go/blockchain"
+	_ "github.com/ubtr/ubt-go/blockchain"
 
-	am "ubt/agents/am"
+	am "github.com/ubtr/ubt-go/am"
 
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
