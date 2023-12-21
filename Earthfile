@@ -1,7 +1,8 @@
 VERSION 0.7
 
 build:
-  ARG tag=latest
+  ARG EARTHLY_TARGET_TAG_DOCKER
+  ARG tag=$EARTHLY_TARGET_TAG_DOCKER
   BUILD ./cmd/agent-eth+build --tag $tag
   BUILD ./cmd/am+build --tag $tag
   BUILD ./cmd/am-pkcs+build --tag $tag

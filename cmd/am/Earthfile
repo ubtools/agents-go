@@ -1,6 +1,7 @@
 VERSION 0.7
 
 build:
-  ARG tag=latest
+  ARG EARTHLY_TARGET_TAG_DOCKER
+  ARG tag=$EARTHLY_TARGET_TAG_DOCKER
   FROM DOCKERFILE -f ./Dockerfile ../../
   SAVE IMAGE --push ubtr/am:$tag
