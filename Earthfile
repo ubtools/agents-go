@@ -7,13 +7,14 @@ build:
   BUILD ./cmd/am+build --tag $tag
   BUILD ./cmd/am-pkcs+build --tag $tag
 
-integration-tests:
+it:
   FROM ubtr/golang-nodejs:1.21.1-20.10-alpine3.18
   COPY . /work
-  WORKDIR /work/tests
+  WORKDIR /work/it
   RUN npm install
   RUN npm test
 
 test:
-  BUILD ./tests+test
+  LOCALLY
+  RUN go test -v ./...
   
