@@ -8,7 +8,19 @@ services:
     volumes:
       - './config.yml:/config.yml'
     command: ['--config', '/config.yml', '--log', 'DEBUG', "-r"]
+  postgres:
+    image: postgres:15.5
+    hostname: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: am
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
   am:
-    image: 'ubtr/am-db:${UBT_AGENTS_VERSION}'
+    image: 'ubtr/am:${UBT_AGENTS_VERSION}'
+    command: ['--log', 'DEBUG', "--db", "host=postgres user=postgres password=postgres dbname=am"]
+    depends_on:
+      - postgres
     ports:
       - '50052:50052'
