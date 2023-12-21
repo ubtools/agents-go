@@ -51,7 +51,7 @@ func main() {
 			},
 			&cli.StringFlag{
 				Name:  "db",
-				Value: "am.db",
+				Value: "host=localhost user=postgres password=postgres dbname=am",
 				Usage: "Database connection string",
 			},
 		},

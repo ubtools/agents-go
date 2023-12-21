@@ -4,12 +4,15 @@ import (
 	"context"
 	"crypto/rand"
 	"errors"
+	"fmt"
+	"log/slog"
+	"time"
 
 	ubt_am "github.com/ubtr/ubt/go/api/proto/services/am"
 
 	"github.com/ubtr/ubt-go/blockchain"
 
-	"github.com/glebarez/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -20,8 +23,23 @@ type Account struct {
 	PK          []byte
 }
 
+func gormOpenRetry(dsn string, opts ...gorm.Option) (*gorm.DB, error) {
+	retryCount := 10
+	var db *gorm.DB
+	var err error
+	for i := 0; i < retryCount; i++ {
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err == nil {
+			return db, nil
+		}
+		slog.Warn(fmt.Sprintf("[%v of %v] Failed to connect to DB, retrying...", i, retryCount))
+		time.Sleep(2 * time.Second)
+	}
+	return nil, err
+}
+
 func InitAMServier(dsn string) *AMServer {
-	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	db, err := gormOpenRetry(dsn, &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
