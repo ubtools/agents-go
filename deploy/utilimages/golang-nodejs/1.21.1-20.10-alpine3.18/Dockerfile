@@ -77,7 +77,8 @@ RUN addgroup -g 1000 node \
   && apk del .build-deps \
   # smoke tests
   && node --version \
-  && npm --version
+  && npm --version \
+  && apk add --no-cache gcc musl-dev
 
 ENV YARN_VERSION 1.22.19
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/ThalesIgnite/crypto11"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ubtr/ubt-go/blockchain"
 	"github.com/ubtr/ubt-go/blockchain/eth"
 	ubt_am "github.com/ubtr/ubt/go/api/proto/services/am"
 	"google.golang.org/grpc/codes"
@@ -46,7 +47,7 @@ func toKeyId(networkType string, name string) string {
 }
 
 func (s *AMPKCSServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAccountRequest) (*ubt_am.CreateAccountResponse, error) {
-	signer, err := s.pkcsCtx.GenerateECDSAKeyPair([]byte(toKeyId(req.NetworkType, req.Name)), crypto.S256())
+	signer, err := s.pkcsCtx.GenerateECDSAKeyPair([]byte(toKeyId(req.ChainType, req.Name)), crypto.S256())
 	if err != nil {
 		panic(err)
 	}
@@ -56,12 +57,27 @@ func (s *AMPKCSServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAcco
 	return &ubt_am.CreateAccountResponse{Address: addr.String()}, status.Errorf(codes.Unimplemented, "method CreateAccount not implemented")
 }
 
-func (s *AMPKCSServer) HasAccount(ctx context.Context, req *ubt_am.HasAccountRequest) (*ubt_am.HasAccountResponse, error) {
+func (s *AMPKCSServer) GetAccount(ctx context.Context, req *ubt_am.GetAccountRequest) (*ubt_am.GetAccountResponse, error) {
 	signer, err := s.pkcsCtx.FindKeyPair([]byte(toKeyId("TBD", req.Name)), nil)
 	if err != nil {
 		return nil, err
 	}
-	return &ubt_am.HasAccountResponse{Exists: signer != nil && err != nil}, nil
+
+	if signer != nil {
+		bc := blockchain.GetBlockchain("ETH")
+		if bc == nil {
+			return nil, status.Errorf(codes.Unimplemented, "Unsupported chain type '%s'", "ETH")
+		}
+
+		address, err := bc.RecoverAddress(signer.Public().(*ecdsa.PublicKey).X.Bytes(), nil)
+		if err != nil {
+			return nil, err
+		}
+
+		return &ubt_am.GetAccountResponse{Address: address}, nil
+	}
+
+	return nil, status.Errorf(codes.NotFound, "Account not found")
 }
 
 func (s *AMPKCSServer) ListAccounts(context.Context, *ubt_am.ListAccountsRequest) (*ubt_am.ListAccountsResponse, error) {
