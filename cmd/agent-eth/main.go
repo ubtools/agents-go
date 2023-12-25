@@ -17,6 +17,7 @@ import (
 	_ "github.com/ubtr/ubt-go/blockchain/bnb"
 	_ "github.com/ubtr/ubt-go/blockchain/eth"
 	_ "github.com/ubtr/ubt-go/blockchain/trx"
+	"github.com/ubtr/ubt-go/cmd/cmdutil"
 	"github.com/ubtr/ubt-go/eth/config"
 	"github.com/ubtr/ubt-go/eth/server"
 	"github.com/ubtr/ubt-go/trx"
@@ -97,12 +98,10 @@ func main() {
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
-			var lvl = slogLevelFromString(cCtx.String("log"))
-			h := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{AddSource: lvl == slog.LevelDebug, Level: lvl})
-			slog.SetDefault(slog.New(h))
+			cmdutil.InitLogger(cCtx.String("log"))
 
 			//specific(ethereum)
-			if lvl == slog.LevelDebug {
+			if slog.Default().Enabled(cCtx.Context, slog.LevelDebug) {
 				ethereum_log.Root().SetHandler(ethereum_log.StreamHandler(os.Stdout, ethereum_log.LogfmtFormat()))
 			}
 			//end

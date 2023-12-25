@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ubtr/ubt-go/blockchain"
 	"github.com/ubtr/ubt-go/blockchain/eth"
 	"github.com/ubtr/ubt/go/api/proto"
 	"github.com/ubtr/ubt/go/api/proto/services"
@@ -27,7 +28,7 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 		return nil, status.Errorf(codes.Internal, "failed to get gas price: %v", err)
 	}
 
-	currencyId, err := CurrencyIdFromString(req.Amount.CurrencyId)
+	currencyId, err := blockchain.UChainCurrencyIdromString(req.Amount.CurrencyId)
 	if err != nil {
 		return nil, err
 	}

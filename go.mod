@@ -6,7 +6,7 @@ require (
 	github.com/ThalesIgnite/crypto11 v1.2.5
 	github.com/ethereum/go-ethereum v1.13.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
-	github.com/ubtr/ubt/go v0.0.7
+	github.com/ubtr/ubt/go v0.0.8
 	github.com/urfave/cli/v2 v2.25.7
 	golang.org/x/time v0.3.0
 	google.golang.org/grpc v1.58.2

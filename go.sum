@@ -174,8 +174,8 @@ github.com/tklauser/numcpus v0.6.1 h1:ng9scYS7az0Bk4OZLvrNXNSAO2Pxr1XXRAPyjhIx+F
 github.com/tklauser/numcpus v0.6.1/go.mod h1:1XfjsgE2zo8GVw7POkMbHENHzVg3GzmoZ9fESEdAacY=
 github.com/tyler-smith/go-bip39 v1.1.0 h1:5eUemwrMargf3BSLRRCalXT93Ns6pQJIjYQN2nyfOP8=
 github.com/tyler-smith/go-bip39 v1.1.0/go.mod h1:gUYDtqQw1JS3ZJ8UWVcGTGqqr6YIN3CWg+kkNaLt55U=
-github.com/ubtr/ubt/go v0.0.7 h1:dV7wcV5QhE6RWqfBDV3ivk76VMJ3XBLxpuX//Ekx9Ss=
-github.com/ubtr/ubt/go v0.0.7/go.mod h1:4dPraf2wevs+DY45+i21UAQNMQFrul2WFcmsHnCcBkk=
+github.com/ubtr/ubt/go v0.0.8 h1:42rgICTH8MAzH915Tdz0+EHCwGea4PoDft7ejOxoEW8=
+github.com/ubtr/ubt/go v0.0.8/go.mod h1:tVyZFbq5CBy3WYE25S/Zwodlr0AkCaNb6AN1XfeN3tw=
 github.com/urfave/cli/v2 v2.25.7 h1:VAzn5oq403l5pHjc4OhD54+XGO9cdKVL/7lDjF+iKUs=
 github.com/urfave/cli/v2 v2.25.7/go.mod h1:8qnjx1vcq5s2/wpsqoZFndg2CE5tNFyrTvS6SinrnYQ=
 github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 h1:bAn7/zixMGCfxrRTfdpNzjtPYqr8smhKouy9mxVdGPU=

@@ -16,5 +16,6 @@ func (srv *EthServer) GetAccount(ctx context.Context, req *services.GetAccountRe
 	}, nil
 }
 func (srv *EthServer) DeriveAccount(ctx context.Context, req *services.DeriveAccountRequest) (*proto.Account, error) {
+
 	return nil, status.Errorf(codes.Unimplemented, "method DeriveAccount not implemented")
 }

@@ -2,8 +2,8 @@ package server
 
 import (
 	"context"
-	"strings"
 
+	"github.com/ubtr/ubt-go/blockchain"
 	"github.com/ubtr/ubt-go/eth/contracts/erc20"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -15,50 +15,9 @@ import (
 
 const ETH_DECIMALS = 18
 
-type CurrencyId struct {
-	Address string
-	Token   string
-}
-
-func CurrencyIdFromString(currencyId string) (CurrencyId, error) {
-	stringParts := strings.Split(currencyId, ":")
-	var ret CurrencyId
-	if len(stringParts) == 2 {
-		ret.Address = stringParts[0]
-		ret.Token = stringParts[1]
-	} else if len(stringParts) == 1 {
-		ret.Address = stringParts[0]
-		ret.Token = ""
-	} else if len(stringParts) > 2 {
-		return ret, status.Errorf(codes.InvalidArgument, "invalid currency id: %s", currencyId)
-	}
-
-	return ret, nil
-}
-
-func (c *CurrencyId) String() string {
-	res := c.Address
-	if c.Token != "" {
-		res += ":" + c.Token
-	}
-	return res
-}
-
-func (c *CurrencyId) IsNative() bool {
-	return c.Address == ""
-}
-
-func (c *CurrencyId) IsErc20() bool {
-	return c.Address != "" && c.Token == ""
-}
-
-func (c *CurrencyId) IsErc1155() bool {
-	return c.Address != "" && c.Token != ""
-}
-
 func (srv *EthServer) GetCurrency(ctx context.Context, req *services.GetCurrencyRequest) (*proto.Currency, error) {
 	// naive implementation, no cache
-	currencyId, err := CurrencyIdFromString(req.Id)
+	currencyId, err := blockchain.UChainCurrencyIdromString(req.Id)
 	if err != nil {
 		return nil, err
 	}

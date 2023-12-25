@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ubtr/ubt-go/cmd/cmdutil"
 	am_pkcs "github.com/ubtr/ubt-go/pkcs"
 
 	"github.com/ThalesIgnite/crypto11"
@@ -77,16 +78,22 @@ func main() {
 		Name:            "ubt-am-pkcs",
 		Usage:           "UBT Account Manager (PKCS11)",
 		HideHelpCommand: true,
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:  "log",
+				Value: "INFO",
+				Usage: "Log level",
+			},
+		},
+		Before: func(cCtx *cli.Context) error {
+			cmdutil.InitLogger(cCtx.String("log"))
+			return nil
+		},
 		Commands: []*cli.Command{
 			{
 				Name:  "server",
 				Usage: "Start the UBT Account Manager server",
 				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "log",
-						Value: "INFO",
-						Usage: "Log level",
-					},
 					&cli.StringFlag{
 						Name:  "listen",
 						Value: ":50052",
@@ -99,9 +106,7 @@ func main() {
 					},
 				},
 				Action: func(cCtx *cli.Context) error {
-					var lvl = slogLevelFromString(cCtx.String("log"))
-					h := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: lvl})
-					slog.SetDefault(slog.New(h))
+					cmdutil.InitLogger(cCtx.String("log"))
 
 					lis, err := net.Listen("tcp", cCtx.String("listen"))
 					if err != nil {

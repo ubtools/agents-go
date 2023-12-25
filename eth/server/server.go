@@ -143,7 +143,10 @@ func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 		endNumber = req.StartNumber + *req.Count
 	}
 	endNumber = min(endNumber, topBlockNumber+1)
-	slog.Debug("endNumber", "endNumber", endNumber)
+	slog.Debug("Range", "endNumber", endNumber, "startNumber", req.StartNumber)
+	if req.StartNumber >= endNumber {
+		return status.Errorf(codes.InvalidArgument, "no more blocks: %d", req.StartNumber)
+	}
 
 	for i := req.StartNumber; i < endNumber; i++ {
 		blockReqs = append(blockReqs, rpc.BatchElem{
