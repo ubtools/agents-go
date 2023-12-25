@@ -17,7 +17,7 @@ import (
 )
 
 type Account struct {
-	Name        *string `gorm:"index;unique"`
+	Name        *string `gorm:"uniqueIndex;unique"`
 	NetworkType string
 	Address     string `gorm:"primaryKey"`
 	PK          []byte
