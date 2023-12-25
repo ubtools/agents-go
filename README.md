@@ -1,4 +1,6 @@
-Code for ubt written in Golang
+![CI](https://github.com/ubtr/ubt-go/actions/workflows/ci.yml/badge.svg)
+
+UBT agents and tools in golang
 
 ## Blockchain agents
 - ETH - Ethereum and compatible blockhains( e.g. BNB )
