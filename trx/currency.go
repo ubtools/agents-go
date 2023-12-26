@@ -1,8 +1,9 @@
-package server
+package trx
 
 import (
 	"context"
 
+	"github.com/shengdoushi/base58"
 	"github.com/ubtr/ubt-go/blockchain"
 	rpcerrors "github.com/ubtr/ubt-go/commons/errors"
 	"github.com/ubtr/ubt-go/eth/contracts/erc20"
@@ -16,7 +17,16 @@ import (
 
 const ETH_DECIMALS = 18
 
-func (srv *EthServer) GetCurrency(ctx context.Context, req *services.GetCurrencyRequest) (*proto.Currency, error) {
+func TronAddressToEthAddress(tronAddress string) (common.Address, error) {
+	addrB58, err := base58.Decode(tronAddress, base58.BitcoinAlphabet)
+	if err != nil {
+		return common.Address{}, err
+	}
+	addrB58 = addrB58[:len(addrB58)-4]
+	return common.BytesToAddress(addrB58[len(addrB58)-20:]), nil
+}
+
+func (srv *TrxServer) GetCurrency(ctx context.Context, req *services.GetCurrencyRequest) (*proto.Currency, error) {
 	srv.Log.Debug("GetCurrency", "req", req)
 	// naive implementation, no cache
 	currencyId, err := blockchain.UChainCurrencyIdromString(req.Id)
@@ -35,7 +45,12 @@ func (srv *EthServer) GetCurrency(ctx context.Context, req *services.GetCurrency
 	} else if currencyId.Token == "" {
 		// erc20 token
 		// retreive token info
-		tokenInst, err := erc20.NewErc20(common.HexToAddress(currencyId.Address), srv.C)
+		addr, err := TronAddressToEthAddress(currencyId.Address)
+		if err != nil {
+			return nil, err
+		}
+
+		tokenInst, err := erc20.NewErc20(addr, srv.C)
 		if err != nil {
 			srv.Log.Error("Failed to create token instance", "err", err)
 			return nil, rpcerrors.INVALID_CURRENCY

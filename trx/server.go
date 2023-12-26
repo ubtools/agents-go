@@ -42,8 +42,9 @@ func InitServer(ctx context.Context, config *config.ChainConfig) *TrxServer {
 	if err != nil {
 		panic(err)
 	}
-	slog.Info("Connected", "chainId", chainId)
-	var srv = TrxServer{EthServer: server.EthServer{C: client, Config: *config, ChainId: chainId}}
+	var srv = TrxServer{EthServer: server.EthServer{C: client, Config: *config, ChainId: chainId, Log: slog.With("chain", config.ChainType+":"+config.ChainNetwork)}}
+
+	srv.Log.Info("Connected", "chainId", chainId)
 	return &srv
 }
 
@@ -63,7 +64,7 @@ func toBlockNumArg(number *big.Int) string {
 }
 
 func (srv *TrxServer) ListBlocks(req *services.ListBlocksRequest, res services.UbtBlockService_ListBlocksServer) error {
-	slog.Debug(fmt.Sprintf("ListBlocks from %d, count = %v\n", req.StartNumber, req.Count))
+	srv.Log.Debug(fmt.Sprintf("ListBlocks from %d, count = %v\n", req.StartNumber, req.Count))
 	blockReqs := []rpc.BatchElem{}
 	var endNumber uint64 = 0
 	if (req.Count == nil) || (*req.Count == 0) {
@@ -84,10 +85,10 @@ func (srv *TrxServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 		return err
 	}
 
-	slog.Debug(fmt.Sprintf("Got %d blocks\n", len(blockReqs)))
+	srv.Log.Debug(fmt.Sprintf("Got %d blocks\n", len(blockReqs)))
 
 	for _, blockReq := range blockReqs {
-		slog.Debug("Block:", "result", blockReq.Result, "error", blockReq.Error)
+		srv.Log.Debug("Block:", "result", blockReq.Result, "error", blockReq.Error)
 		if blockReq.Error != nil {
 			return blockReq.Error
 		}
@@ -95,16 +96,16 @@ func (srv *TrxServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 		converter := &BlockConverter{Config: &srv.Config, Client: srv.C, Ctx: res.Context()}
 		block, err := converter.EthBlockToProto(blockRes)
 		if err != nil {
-			slog.Error("Error converting block", "error", err)
+			srv.Log.Error("Error converting block", "error", err)
 			return err
 		}
-		slog.Debug("TxCount", "count", len(block.Transactions))
+		srv.Log.Debug("TxCount", "count", len(block.Transactions))
 		err = res.Send(block)
 		if err != nil {
-			slog.Error("Error sending block", "error", err)
+			srv.Log.Error("Error sending block", "error", err)
 			return err
 		}
 	}
-	slog.Debug("Done sending blocks")
+	srv.Log.Debug("Done sending blocks")
 	return nil
 }

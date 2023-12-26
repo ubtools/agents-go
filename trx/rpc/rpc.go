@@ -46,11 +46,9 @@ func (b *HeaderWithBody) UnmarshalJSON(input []byte) error {
 		//Transactions2 []RpcTx  `json:"transactions3"`
 	}
 
-	slog.Debug("Suka", "input", string(input))
 	if err := json.Unmarshal(input, &txStruct); err != nil {
 		return err
 	}
-	slog.Debug("Suka2")
 	b.Body.Transactions = txStruct.Transactions
 
 	return nil

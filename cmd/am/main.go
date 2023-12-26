@@ -9,6 +9,8 @@ import (
 	"net"
 	"os"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	ubt_am "github.com/ubtr/ubt/go/api/proto/services/am"
 	"gorm.io/gorm"
 
@@ -69,7 +71,22 @@ func main() {
 					}
 					srv := am.InitAMServier(cCtx.String("db"), []byte(cCtx.String("enckey")))
 
-					s := grpc.NewServer()
+					grpcPanicRecoveryHandler := func(p any) (err error) {
+						panic(err)
+						//return status.Errorf(codes.Internal, "%s", p)
+					}
+
+					s := grpc.NewServer(
+						grpc.ChainUnaryInterceptor(
+							// Order matters e.g. tracing interceptor have to create span first for the later exemplars to work.
+							logging.UnaryServerInterceptor(cmdutil.InterceptorLogger(nil)),
+							recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
+						),
+						grpc.ChainStreamInterceptor(
+							logging.StreamServerInterceptor(cmdutil.InterceptorLogger(nil)),
+							recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
+						),
+					)
 					ubt_am.RegisterUbtAccountManagerServer(s, srv)
 					slog.Info("server listening at %v", "address", lis.Addr())
 

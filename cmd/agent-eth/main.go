@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"log/slog"
 	"net"
@@ -44,27 +43,6 @@ func slogLevelFromString(lvl string) (programLevel slog.Level) {
 		log.Fatalf("Invalid log level %s", lvl)
 	}
 	return programLevel
-}
-
-// interceptorLogger adapts go-kit logger to interceptor logger.
-func interceptorLogger(logger *slog.Logger) logging.Logger {
-	if logger == nil {
-		logger = slog.Default()
-	}
-	return logging.LoggerFunc(func(_ context.Context, lvl logging.Level, msg string, fields ...any) {
-		switch lvl {
-		case logging.LevelDebug:
-			logger.Debug(msg, fields...)
-		case logging.LevelInfo:
-			logger.Info(msg, fields...)
-		case logging.LevelWarn:
-			logger.Warn(msg, fields...)
-		case logging.LevelError:
-			logger.Debug(msg, fields...)
-		default:
-			panic(fmt.Sprintf("unknown level %v", lvl))
-		}
-	})
 }
 
 func main() {
@@ -130,11 +108,11 @@ func main() {
 			s := grpc.NewServer(
 				grpc.ChainUnaryInterceptor(
 					// Order matters e.g. tracing interceptor have to create span first for the later exemplars to work.
-					logging.UnaryServerInterceptor(interceptorLogger(nil)),
+					logging.UnaryServerInterceptor(cmdutil.InterceptorLogger(nil)),
 					recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 				),
 				grpc.ChainStreamInterceptor(
-					logging.StreamServerInterceptor(interceptorLogger(nil)),
+					logging.StreamServerInterceptor(cmdutil.InterceptorLogger(nil)),
 					recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 				),
 			)

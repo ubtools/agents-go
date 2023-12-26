@@ -33,6 +33,7 @@ type EthServer struct {
 	Config  config.ChainConfig
 	Chain   blockchain.Blockchain
 	ChainId *big.Int
+	Log     *slog.Logger
 }
 
 func (srv *EthServer) String() string {
@@ -53,13 +54,15 @@ func InitServer(ctx context.Context, config *config.ChainConfig) *EthServer {
 	if blockchain == nil {
 		panic(fmt.Sprintf("Unsupported chain type '%s'", config.ChainType))
 	}
-	slog.Info("Connected", "chainId", chainId)
-	var srv = EthServer{C: client, Config: *config, ChainId: chainId, Chain: *blockchain}
+
+	var srv = EthServer{C: client, Config: *config, ChainId: chainId, Chain: *blockchain, Log: slog.With("chain", config.ChainType+":"+config.ChainNetwork)}
+
+	srv.Log.Info("Connected", "chainId", chainId)
 	return &srv
 }
 
 func (srv *EthServer) GetChain(ctx context.Context, chainId *proto.ChainId) (*proto.Chain, error) {
-	slog.Debug("GetChain", "chainId.type", chainId.Type, "srv.Chain.Type", srv.Chain.Type)
+	srv.Log.Debug("GetChain", "chainId.type", chainId.Type, "srv.Chain.Type", srv.Chain.Type)
 	if chainId.Type != srv.Chain.Type {
 		return nil, status.Errorf(codes.Unimplemented, "method GetChain not implemented")
 	}
@@ -125,7 +128,7 @@ func (srv *EthServer) GetBlock(ctx context.Context, req *services.BlockRequest) 
 }
 
 func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.UbtBlockService_ListBlocksServer) error {
-	slog.Debug(fmt.Sprintf("ListBlocks from %d, count = %v\n", req.StartNumber, req.Count))
+	srv.Log.Debug(fmt.Sprintf("ListBlocks from %d, count = %v\n", req.StartNumber, req.Count))
 
 	// get top block number
 	var topBlockNumberStr string
@@ -143,7 +146,7 @@ func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 		endNumber = req.StartNumber + *req.Count
 	}
 	endNumber = min(endNumber, topBlockNumber+1)
-	slog.Debug("Range", "endNumber", endNumber, "startNumber", req.StartNumber)
+	srv.Log.Debug("Range", "endNumber", endNumber, "startNumber", req.StartNumber)
 	if req.StartNumber >= endNumber {
 		return status.Errorf(codes.InvalidArgument, "no more blocks: %d", req.StartNumber)
 	}
@@ -171,17 +174,17 @@ func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 		converter := &BlockConverter{Config: &srv.Config, Client: srv.C, Ctx: res.Context()}
 		block, err := converter.EthBlockToProto(blockRes)
 		if err != nil {
-			slog.Error("Error converting block", "error", err)
+			srv.Log.Error("Error converting block", "error", err)
 			return err
 		}
-		slog.Debug("TxCount", "count", len(block.Transactions))
+		srv.Log.Debug("TxCount", "count", len(block.Transactions))
 		err = res.Send(block)
 		if err != nil {
-			slog.Error("Error sending block", "error", err)
+			srv.Log.Error("Error sending block", "error", err)
 			return err
 		}
 	}
-	slog.Debug("Done sending blocks")
+	srv.Log.Debug("Done sending blocks")
 	return nil
 }
 

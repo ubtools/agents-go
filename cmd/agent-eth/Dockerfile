@@ -1,8 +1,12 @@
 FROM golang:1.21-alpine3.18 as build
 
+ADD ./go.mod /work/go.mod
+ADD ./go.sum /work/go.sum
+WORKDIR /work
+RUN go mod download
 ADD ./ /work
 WORKDIR /work/cmd/agent-eth
-RUN go mod download
+
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build
 
 FROM alpine:3.18

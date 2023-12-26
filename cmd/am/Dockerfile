@@ -1,5 +1,9 @@
 FROM golang:1.21-alpine3.18 as build
 
+ADD ./go.mod /work/go.mod
+ADD ./go.sum /work/go.sum
+WORKDIR /work
+RUN go mod download
 ADD ./ /work
 WORKDIR /work/cmd/am
 RUN go mod download
