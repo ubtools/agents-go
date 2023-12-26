@@ -19,8 +19,15 @@ services:
       POSTGRES_PASSWORD: postgres
   am:
     image: 'ubtr/am:${UBT_AGENTS_VERSION}'
-    command: ['--log', 'DEBUG', "--db", "host=postgres user=postgres password=postgres dbname=am"]
+    command: ['--log', 'DEBUG', "server", "--db", "host=postgres user=postgres password=postgres dbname=am"]
     depends_on:
       - postgres
     ports:
       - '50052:50052'
+  envoy:
+    image: envoyproxy/envoy:v1.28.0
+    ports:
+      - "8080:8080"
+      - "9901:9901"
+    volumes:
+      - ./envoy.yml:/etc/envoy/envoy.yaml
