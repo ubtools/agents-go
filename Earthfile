@@ -29,7 +29,8 @@ ci:
 
 release:
   ARG EARTHLY_TARGET_TAG_DOCKER
+  ARG repo=ubtr
   FROM alpine:3.18
   ARG tag=$(echo -n ${EARTHLY_TARGET_TAG_DOCKER} | sed 's/v\(.*\)/\1/')
-  BUILD +build --tag $tag
+  BUILD +build --tag $tag --repo $repo
   

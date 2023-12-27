@@ -2,6 +2,7 @@ VERSION 0.7
 
 build:
   ARG EARTHLY_TARGET_TAG_DOCKER
+  ARG repo=ubtr
   ARG tag=$EARTHLY_TARGET_TAG_DOCKER
   FROM DOCKERFILE -f ./Dockerfile ../../
-  SAVE IMAGE --push ubtr/agent-eth:$tag
+  SAVE IMAGE --push $repo/agent-eth:$tag
