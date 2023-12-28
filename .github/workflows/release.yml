@@ -9,6 +9,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       FORCE_COLOR: 1
     steps:
     - uses: earthly/actions-setup@v1
@@ -24,7 +26,9 @@ jobs:
           branch="${GITHUB_REF##*/}"
         fi
         git checkout -b "$branch" || true
+    - name: Docker login
+      run: docker login --username ${DOCKER_USERNAME} --password ${DOCKER_PASSWORD}
     - name: Earthly version
       run: earthly --version
     - name: Run build
-      run: earthly --ci +release
+      run: earthly --ci --push +release
