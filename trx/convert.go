@@ -2,7 +2,6 @@ package trx
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"strings"
 	"time"
@@ -80,7 +79,7 @@ func (c *BlockConverter) EthBlockToProto(block *trxrpc.HeaderWithBody) (*proto.B
 func (c *BlockConverter) EthTransactionToProto(ethTx *trxrpc.RpcTx, logs []types.Log) (*proto.Transaction, error) {
 	transfers := []*proto.Transfer{}
 
-	log.Printf("TxLogs %s : %+v", ethTx.Tx.Hash.String(), logs)
+	slog.Debug("TxLogs", "txId", ethTx.Tx.Hash.String(), "logs", logs)
 	if ethTx.Tx.Value.ToInt().Sign() > 0 {
 		transfer, err := c.ConvertNativeTransfer(ethTx)
 		if err != nil {
@@ -127,17 +126,13 @@ func (c *BlockConverter) EthTransactionToProto(ethTx *trxrpc.RpcTx, logs []types
 	}, nil
 }
 
-func (c *BlockConverter) getCurrencyId() string {
-	return c.Config.ChainType + ":" + c.Config.ChainNetwork
-}
-
 func (c *BlockConverter) ConvertNativeTransfer(ethTx *trxrpc.RpcTx) (*proto.Transfer, error) {
 	return &proto.Transfer{
 		TxId:   ethTx.Tx.Hash.Bytes(),
 		From:   ethTx.TxExtraInfo.From.String(),
 		To:     ethTx.Tx.To.String(),
 		Status: 1,
-		Amount: &proto.CurrencyAmount{CurrencyId: c.getCurrencyId(), Value: &proto.Uint256{Data: ethTx.Tx.Value.ToInt().Bytes()}},
+		Amount: &proto.CurrencyAmount{CurrencyId: "", Value: &proto.Uint256{Data: ethTx.Tx.Value.ToInt().Bytes()}},
 	}, nil
 }
 
@@ -162,7 +157,7 @@ func (c *BlockConverter) ConvertERC20Transfer(ethTx *trxrpc.RpcTx, logs []types.
 }
 
 func (c *BlockConverter) DecodeLogAsTransfer(ethTx *trxrpc.RpcTx, log types.Log) (*proto.Transfer, error) {
-	currencyId := c.getCurrencyId() + ":" + log.Address.String()
+	currencyId := log.Address.String()
 
 	return &proto.Transfer{
 		TxId:   ethTx.Tx.Hash.Bytes(),

@@ -8,9 +8,11 @@ import (
 	"log/slog"
 	"math/big"
 
+	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/ubtr/ubt-go/commons"
 	"github.com/ubtr/ubt-go/eth/client"
 	"github.com/ubtr/ubt-go/eth/config"
+	"github.com/ubtr/ubt-go/eth/server/convert"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -19,6 +21,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/ubtr/ubt-go/blockchain"
+	ubtcache "github.com/ubtr/ubt-go/commons/cache"
 
 	"github.com/ubtr/ubt/go/api/proto"
 	"github.com/ubtr/ubt/go/api/proto/services"
@@ -29,15 +32,12 @@ type EthServer struct {
 	services.UnimplementedUbtBlockServiceServer
 	services.UnimplementedUbtConstructServiceServer
 	services.UnimplementedUbtCurrencyServiceServer
-	C       *client.RateLimitedClient
-	Config  config.ChainConfig
-	Chain   blockchain.Blockchain
-	ChainId *big.Int
-	Log     *slog.Logger
-}
-
-func (srv *EthServer) String() string {
-	return fmt.Sprintf("EthServer{%s:%s}", srv.Config.ChainType, srv.Config.ChainNetwork)
+	C             *client.RateLimitedClient
+	Config        config.ChainConfig
+	Chain         blockchain.Blockchain
+	ChainId       *big.Int
+	CurrencyCache cache.CacheInterface[*proto.Currency]
+	Log           *slog.Logger
 }
 
 func InitServer(ctx context.Context, config *config.ChainConfig) *EthServer {
@@ -55,10 +55,14 @@ func InitServer(ctx context.Context, config *config.ChainConfig) *EthServer {
 		panic(fmt.Sprintf("Unsupported chain type '%s'", config.ChainType))
 	}
 
-	var srv = EthServer{C: client, Config: *config, ChainId: chainId, Chain: *blockchain, Log: slog.With("chain", config.ChainType+":"+config.ChainNetwork)}
+	var srv = EthServer{C: client, Config: *config, ChainId: chainId, Chain: *blockchain, CurrencyCache: ubtcache.NewCache[*proto.Currency](), Log: slog.With("chain", config.ChainType+":"+config.ChainNetwork)}
 
 	srv.Log.Info("Connected", "chainId", chainId)
 	return &srv
+}
+
+func (srv *EthServer) String() string {
+	return fmt.Sprintf("EthServer{%s:%s}", srv.Config.ChainType, srv.Config.ChainNetwork)
 }
 
 func (srv *EthServer) GetChain(ctx context.Context, chainId *proto.ChainId) (*proto.Chain, error) {
@@ -66,12 +70,12 @@ func (srv *EthServer) GetChain(ctx context.Context, chainId *proto.ChainId) (*pr
 	if chainId.Type != srv.Chain.Type {
 		return nil, status.Errorf(codes.Unimplemented, "method GetChain not implemented")
 	}
-	id := uint32(srv.Chain.TypeNum)
+	bip44Id := uint32(srv.Chain.TypeNum)
 	return &proto.Chain{
 		Id:              chainId,
-		Bip44Id:         &id,
+		Bip44Id:         &bip44Id,
 		Testnet:         false,
-		FinalizedHeight: 20,
+		FinalizedHeight: 20, //FIXME: this is wrong assumption
 		MsPerBlock:      3000,
 		SupportedServices: []proto.Chain_ChainSupportedServices{
 			proto.Chain_BLOCK, proto.Chain_CONSTRUCT, proto.Chain_CURRENCIES},
@@ -85,7 +89,7 @@ func (srv *EthServer) ListChains(req *services.ListChainsRequest, s services.Ubt
 	chain := srv.Config
 	err := s.Send(&proto.Chain{
 		Id:              &proto.ChainId{Type: chain.ChainType, Network: chain.ChainNetwork},
-		Bip44Id:         nil, //srv.Chain.TypeNum,
+		Bip44Id:         nil, //&srv.Chain.TypeNum,
 		Testnet:         chain.Testnet,
 		FinalizedHeight: 20,
 		MsPerBlock:      3000,
@@ -118,7 +122,7 @@ func (srv *EthServer) GetBlock(ctx context.Context, req *services.BlockRequest) 
 	if err != nil {
 		return nil, err
 	}
-	converter := &BlockConverter{Config: &srv.Config, Client: srv.C, Ctx: ctx}
+	converter := &convert.BlockConverter{Config: &srv.Config, Client: srv.C, Ctx: ctx, Log: srv.Log.With("block", req.Id)}
 	b, err := converter.EthBlockToProto(nil)
 	if err != nil {
 		return nil, err
@@ -155,7 +159,7 @@ func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 		blockReqs = append(blockReqs, rpc.BatchElem{
 			Method: "eth_getBlockByNumber",
 			Args:   []interface{}{toBlockNumArg(big.NewInt(int64(i))), true},
-			Result: &HeaderWithBody{},
+			Result: &convert.HeaderWithBody{},
 		})
 	}
 
@@ -164,14 +168,14 @@ func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 		return err
 	}
 
-	slog.Debug(fmt.Sprintf("Got %d blocks\n", len(blockReqs)))
+	slog.Debug("Block received", "count", len(blockReqs))
 
 	for _, blockReq := range blockReqs {
 		if blockReq.Error != nil {
 			return blockReq.Error
 		}
-		blockRes := blockReq.Result.(*HeaderWithBody)
-		converter := &BlockConverter{Config: &srv.Config, Client: srv.C, Ctx: res.Context()}
+		blockRes := blockReq.Result.(*convert.HeaderWithBody)
+		converter := &convert.BlockConverter{Config: &srv.Config, Client: srv.C, Ctx: res.Context(), Log: srv.Log.With("block", blockRes.Header.Hash())}
 		block, err := converter.EthBlockToProto(blockRes)
 		if err != nil {
 			srv.Log.Error("Error converting block", "error", err)

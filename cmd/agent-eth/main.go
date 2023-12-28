@@ -19,6 +19,7 @@ import (
 	"github.com/ubtr/ubt-go/cmd/cmdutil"
 	"github.com/ubtr/ubt-go/eth/config"
 	"github.com/ubtr/ubt-go/eth/server"
+	"github.com/ubtr/ubt-go/proxy"
 	"github.com/ubtr/ubt-go/trx"
 
 	"github.com/ubtr/ubt/go/api/proto/services"
@@ -139,13 +140,13 @@ func main() {
 	}
 }
 
-func InitServerProxy(configs map[string]config.ChainTypeConfig) *server.ServerProxy {
-	servers := make(map[string]server.IUbtAgentServer)
+func InitServerProxy(configs map[string]config.ChainTypeConfig) *proxy.ServerProxy {
+	servers := make(map[string]proxy.IUbtAgentServer)
 	for k, v := range configs {
 		for nk, nv := range v.Networks {
 			nv.ChainType = k
 			nv.ChainNetwork = nk
-			var ethSrv server.IUbtAgentServer
+			var ethSrv proxy.IUbtAgentServer
 			// TODO: use mapping
 			if nv.ChainType == "TRX" {
 				ethSrv = trx.InitServer(context.Background(), &nv)
@@ -155,5 +156,5 @@ func InitServerProxy(configs map[string]config.ChainTypeConfig) *server.ServerPr
 			servers[k+":"+nk] = ethSrv
 		}
 	}
-	return server.InitServerProxy(servers)
+	return proxy.InitServerProxy(servers)
 }
