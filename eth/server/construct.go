@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"log/slog"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum"
@@ -39,10 +38,10 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 
 	var tx *types.Transaction
 
-	slog.Debug("gasPrice", "gasPrice", gasPrice.String())
+	srv.Log.Debug("gasPrice", "gasPrice", gasPrice.String())
 	if currencyId.IsNative() {
 		tx = types.NewTransaction(nonce, common.HexToAddress(req.To), big.NewInt(0).SetBytes(req.Amount.Value.Data), uint64(21000), gasPrice, nil)
-		slog.Debug("transfer native", "tx", tx)
+		srv.Log.Debug("transfer native", "tx", tx)
 	} else if currencyId.IsErc20() {
 		transferFnSignature := []byte("transfer(address,uint256)")
 		hash := sha3.NewLegacyKeccak256()
@@ -59,7 +58,7 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 		data = append(data, paddedAddress...)
 		data = append(data, paddedAmount...)
 
-		slog.Debug("estimating gas", "from", req.From, "to", req.To, "tokenAddress", tokenAddress)
+		srv.Log.Debug("estimating gas", "from", req.From, "to", req.To, "tokenAddress", tokenAddress)
 		gasLimit, err := rpc.AdoptClient(srv.C).EstimateGas(ctx, ethereum.CallMsg{
 			From: common.HexToAddress(req.From),
 			To:   &tokenAddress,
@@ -71,15 +70,14 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 		gasEstimate = gasLimit
 
 		tx = types.NewTransaction(nonce, tokenAddress, big.NewInt(0), gasLimit, gasPrice, data)
-		slog.Debug("transfer erc20", "tx", tx)
+		srv.Log.Debug("transfer erc20", "tx", tx)
 	} else {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid currency id: %s", req.Amount.CurrencyId)
 	}
 
-	slog.Debug("chainId", "chainId", srv.ChainId, "tx", tx)
 	txId := types.NewEIP155Signer(srv.ChainId).Hash(tx)
 
-	slog.Debug("calculating txId", "txId", txId)
+	srv.Log.Debug("calculating txId", "txId", txId)
 	rawTx, err := tx.MarshalBinary()
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to marshal tx: %v", err)
@@ -121,7 +119,7 @@ func (srv *EthServer) SignTransaction(ctx context.Context, req *services.Transac
 	}, nil
 }
 func (srv *EthServer) Send(ctx context.Context, req *services.TransactionSendRequest) (*services.TransactionSendResponse, error) {
-	slog.Debug("sendTx", "req", req)
+	srv.Log.Debug("sendTx", "req", req)
 	tx := &types.Transaction{}
 
 	err := tx.UnmarshalBinary(req.Intent.RawData)
@@ -134,7 +132,7 @@ func (srv *EthServer) Send(ctx context.Context, req *services.TransactionSendReq
 		return nil, status.Errorf(codes.Internal, "failed to sign tx: %v", err)
 	}
 
-	slog.Debug("sendTx", "tx", tx)
+	srv.Log.Debug("sendTx", "tx", tx)
 	err = rpc.AdoptClient(srv.C).SendTransaction(ctx, tx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to send tx: %v", err)
