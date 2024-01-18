@@ -64,27 +64,45 @@ func (s *AMServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAccountR
 	if bc == nil {
 		return nil, errors.New("NO SUCH NETWORK: '" + req.ChainType + "'")
 	}
-	kp, err := bc.GenerateAccount(rand.Reader)
-	if err != nil {
-		return nil, err
-	}
 
-	encryptedKey, err := s.encryptionKey.Encrypt(kp.PrivateKey)
-	if err != nil {
-		return nil, err
+	var encryptedKey []byte
+	var err error
+	var address string
+
+	if req.PrivateKey != nil {
+		encryptedKey, err = s.encryptionKey.Encrypt(req.PrivateKey)
+		if err != nil {
+			return nil, err
+		}
+		address, err = bc.RecoverAddress(nil, req.PrivateKey)
+		if err != nil {
+			return nil, err
+		}
+
+	} else {
+		kp, err := bc.GenerateAccount(rand.Reader)
+		if err != nil {
+			return nil, err
+		}
+
+		encryptedKey, err = s.encryptionKey.Encrypt(kp.PrivateKey)
+		if err != nil {
+			return nil, err
+		}
+		address = kp.Address
 	}
 
 	err = s.db.Save(&Account{
 		Name:        &req.Name,
 		NetworkType: req.ChainType,
 		PK:          encryptedKey,
-		Address:     kp.Address,
+		Address:     address,
 	}).Error
 	if err != nil {
 		return nil, err
 	}
 	return &ubt_am.CreateAccountResponse{
-		Address: kp.Address,
+		Address: address,
 	}, nil
 }
 
