@@ -125,7 +125,7 @@ func main() {
 				slog.Info("Enabling gRPC reflection")
 				reflection.Register(s)
 			}
-			log.Printf("API listening at %v", lis.Addr())
+			slog.Info(fmt.Sprintf("API listening at %v", lis.Addr()))
 
 			go startMetricsListener(cCtx.String("metrics"))
 
@@ -143,7 +143,7 @@ func main() {
 
 func startMetricsListener(addr string) {
 	http.Handle("/metrics", promhttp.Handler())
-	log.Printf("Metrics listening at %v", addr)
+	slog.Info(fmt.Sprintf("Metrics listening at %v", addr))
 	http.ListenAndServe(addr, nil)
 }
 
