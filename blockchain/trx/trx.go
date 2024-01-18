@@ -96,7 +96,7 @@ var Instance = b.Blockchain{
 	TypeNum:         CODE_NUM,
 	GenerateAccount: TronRandomKey,
 	ValidateAddress: ValidateAddress,
-	RecoverAddress:  eth.RecoverAddress,
+	RecoverAddress:  RecoverAddress,
 	Sign:            eth.SignData,
 	Verify:          eth.VerifyData,
 }

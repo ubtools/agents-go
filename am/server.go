@@ -60,6 +60,7 @@ type AMServer struct {
 }
 
 func (s *AMServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAccountRequest) (*ubt_am.CreateAccountResponse, error) {
+
 	bc := blockchain.GetBlockchain(req.ChainType)
 	if bc == nil {
 		return nil, errors.New("NO SUCH NETWORK: '" + req.ChainType + "'")
@@ -78,6 +79,7 @@ func (s *AMServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAccountR
 		if err != nil {
 			return nil, err
 		}
+		slog.Debug("AddressFromPK", "chainType", req.ChainType, "address", address)
 
 	} else {
 		kp, err := bc.GenerateAccount(rand.Reader)
@@ -107,6 +109,7 @@ func (s *AMServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAccountR
 }
 
 func (s *AMServer) GetAccount(ctx context.Context, req *ubt_am.GetAccountRequest) (*ubt_am.GetAccountResponse, error) {
+	slog.Debug("GetAccount", "req", req)
 	var acc Account
 	if req.Name != "" {
 		res := s.db.Where("name = ?", req.Name).First(&acc)
