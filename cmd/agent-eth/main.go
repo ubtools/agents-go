@@ -54,6 +54,12 @@ func main() {
 				Value:   ":50051",
 				Usage:   "Host+port to listen",
 			},
+			&cli.StringFlag{
+				Name:    "metrics",
+				Aliases: []string{"M"},
+				Value:   ":2112",
+				Usage:   "Host+port to server prometheus metrics",
+			},
 			&cli.BoolFlag{
 				Name:    "reflection",
 				Aliases: []string{"r"},
@@ -121,7 +127,7 @@ func main() {
 			}
 			log.Printf("API listening at %v", lis.Addr())
 
-			go startMetricsListener()
+			go startMetricsListener(cCtx.String("metrics"))
 
 			if err := s.Serve(lis); err != nil {
 				log.Fatalf("failed to serve: %v", err)
@@ -135,10 +141,10 @@ func main() {
 	}
 }
 
-func startMetricsListener() {
+func startMetricsListener(addr string) {
 	http.Handle("/metrics", promhttp.Handler())
-	log.Printf("Metrics listening at %v", ":2112")
-	http.ListenAndServe(":2112", nil)
+	log.Printf("Metrics listening at %v", addr)
+	http.ListenAndServe(addr, nil)
 }
 
 func InitServerProxy(configs map[string]config.ChainTypeConfig) *proxy.ServerProxy {
