@@ -16,3 +16,4 @@ RUN apk add --no-cache ca-certificates
 COPY --from=build /work/cmd/am/am /usr/local/bin/am
 
 ENTRYPOINT ["/usr/local/bin/am"]
+CMD ["server"]

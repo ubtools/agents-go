@@ -13,12 +13,17 @@ type ChainTypeConfig struct {
 	DefaultNetwork string                 `yaml:"defaultNetwork"`
 }
 
+type RpcUrlConfig struct {
+	Name     string `yaml:"name"`
+	Url      string `yaml:"url"`
+	LimitRps uint   `yaml:"limitRps"`
+}
+
 type ChainConfig struct {
-	Testnet      bool    `yaml:"testnet"`
-	LimitRPS     float64 `yaml:"limitRPS"`
-	ChainType    string  `yaml:"-"`
-	ChainNetwork string  `yaml:"-"`
-	RpcUrl       string  `yaml:"rpcUrl"`
+	Testnet      bool           `yaml:"testnet"`
+	ChainType    string         `yaml:"-"`
+	ChainNetwork string         `yaml:"-"`
+	RpcUrls      []RpcUrlConfig `yaml:"rpcUrls"`
 }
 
 type Config struct {

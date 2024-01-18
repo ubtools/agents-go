@@ -1,21 +1,24 @@
-package convert
+package server
 
 import (
 	"log/slog"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ubtr/ubt-go/trx/common"
+	ethtypes "github.com/ubtr/ubt-go/eth/types"
 	"github.com/ubtr/ubt/go/api/proto"
 )
 
 const Erc20Transfer = "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef" //Transfer(address,address,uint256)
 
 type TxConverter struct {
+	Srv *EthServer
+
 	Log *slog.Logger
 }
 
-func (c *TxConverter) Convert(ethTx *RpcTx, logs []types.Log) (*proto.Transaction, error) {
+func (c *TxConverter) Convert(ethTx *ethtypes.RpcTx, logs []types.Log) (*proto.Transaction, error) {
 	transfers := []*proto.Transfer{}
 
 	c.Log.Debug("TxLogs", "logs", logs)
@@ -37,25 +40,15 @@ func (c *TxConverter) Convert(ethTx *RpcTx, logs []types.Log) (*proto.Transactio
 		transfers = append(transfers, erc20Transfers...)
 	}
 
-	toString := ""
-	if ethTx.Tx.To() != nil {
-		toString = ethTx.Tx.To().String()
-	}
-
-	fromString := ""
-	if ethTx.TxExtraInfo.From != nil {
-		fromString = ethTx.TxExtraInfo.From.String()
-	}
-
 	valueBytes := []byte{0}
 	if ethTx.Tx.Value() != nil && ethTx.Tx.Value().Sign() > 0 {
 		valueBytes = ethTx.Tx.Value().Bytes()
 	}
 
 	return &proto.Transaction{
-		Id:        ethTx.Tx.Hash().Bytes(),
-		To:        toString,
-		From:      fromString,
+		Id:        ethTx.TxHash.Bytes(),
+		From:      c.Srv.AddressToString(ethTx.TxExtraInfo.From),
+		To:        c.Srv.AddressToString(ethTx.Tx.To()),
 		BlockId:   ethTx.BlockHash.Bytes(),
 		Type:      uint32(ethTx.Tx.Type()),
 		Fee:       &proto.Uint256{Data: []byte{0}},
@@ -65,17 +58,17 @@ func (c *TxConverter) Convert(ethTx *RpcTx, logs []types.Log) (*proto.Transactio
 	}, nil
 }
 
-func (c *TxConverter) ConvertNativeTransfer(ethTx *RpcTx) (*proto.Transfer, error) {
+func (c *TxConverter) ConvertNativeTransfer(ethTx *ethtypes.RpcTx) (*proto.Transfer, error) {
 	return &proto.Transfer{
 		TxId:   ethTx.Tx.Hash().Bytes(),
-		From:   ethTx.TxExtraInfo.From.String(),
-		To:     ethTx.Tx.To().String(),
+		From:   c.Srv.AddressToString(ethTx.TxExtraInfo.From),
+		To:     c.Srv.AddressToString(ethTx.Tx.To()),
 		Status: 1,
 		Amount: &proto.CurrencyAmount{CurrencyId: "", Value: &proto.Uint256{Data: ethTx.Tx.Value().Bytes()}},
 	}, nil
 }
 
-func (c *TxConverter) ConvertERC20Transfer(ethTx *RpcTx, logs []types.Log) ([]*proto.Transfer, error) {
+func (c *TxConverter) ConvertERC20Transfer(ethTx *ethtypes.RpcTx, logs []types.Log) ([]*proto.Transfer, error) {
 	//logs, err := c.Client.FilterLogs(*c.Ctx, ethereum.FilterQuery{BlockHash: ethTx.BlockHash})
 	//if err != nil {
 	//	return nil, err
@@ -95,14 +88,15 @@ func (c *TxConverter) ConvertERC20Transfer(ethTx *RpcTx, logs []types.Log) ([]*p
 	return transfers, nil
 }
 
-func (c *TxConverter) DecodeLogAsTransfer(ethTx *RpcTx, log types.Log) (*proto.Transfer, error) {
-	currencyId := log.Address.String()
-
+func (c *TxConverter) DecodeLogAsTransfer(ethTx *ethtypes.RpcTx, log types.Log) (*proto.Transfer, error) {
+	currencyId := c.Srv.AddressToString(&log.Address)
+	fromAddr := common.BytesToAddress(log.Topics[1].Bytes())
+	toAddr := common.BytesToAddress(log.Topics[2].Bytes())
 	return &proto.Transfer{
 		TxId:   ethTx.Tx.Hash().Bytes(),
 		OpId:   log.TxHash.Bytes(),
-		From:   common.BytesToAddress(log.Topics[1].Bytes()).String(),
-		To:     common.BytesToAddress(log.Topics[2].Bytes()).String(),
+		From:   c.Srv.AddressToString(&fromAddr),
+		To:     c.Srv.AddressToString(&toAddr),
 		Status: 0,
 		Amount: &proto.CurrencyAmount{CurrencyId: currencyId, Value: &proto.Uint256{Data: log.Data}},
 	}, nil

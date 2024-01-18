@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ubtr/ubt-go/blockchain"
 	"github.com/ubtr/ubt-go/blockchain/eth"
+	"github.com/ubtr/ubt-go/eth/rpc"
 	"github.com/ubtr/ubt/go/api/proto"
 	"github.com/ubtr/ubt/go/api/proto/services"
 	"golang.org/x/crypto/sha3"
@@ -18,12 +19,13 @@ import (
 )
 
 func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTransferRequest) (*services.TransactionIntent, error) {
-	nonce, err := srv.C.PendingNonceAt(ctx, common.HexToAddress(req.From))
+
+	nonce, err := rpc.AdoptClient(srv.C).PendingNonceAt(ctx, common.HexToAddress(req.From))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get nonce: %v", err)
 	}
 
-	gasPrice, err := srv.C.SuggestGasPrice(ctx)
+	gasPrice, err := rpc.AdoptClient(srv.C).SuggestGasPrice(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get gas price: %v", err)
 	}
@@ -58,7 +60,7 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 		data = append(data, paddedAmount...)
 
 		slog.Debug("estimating gas", "from", req.From, "to", req.To, "tokenAddress", tokenAddress)
-		gasLimit, err := srv.C.EstimateGas(ctx, ethereum.CallMsg{
+		gasLimit, err := rpc.AdoptClient(srv.C).EstimateGas(ctx, ethereum.CallMsg{
 			From: common.HexToAddress(req.From),
 			To:   &tokenAddress,
 			Data: data,
@@ -133,7 +135,7 @@ func (srv *EthServer) Send(ctx context.Context, req *services.TransactionSendReq
 	}
 
 	slog.Debug("sendTx", "tx", tx)
-	err = srv.C.Client.SendTransaction(ctx, tx)
+	err = rpc.AdoptClient(srv.C).SendTransaction(ctx, tx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to send tx: %v", err)
 	}

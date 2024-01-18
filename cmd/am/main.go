@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	ubt_am "github.com/ubtr/ubt/go/api/proto/services/am"
@@ -19,7 +20,6 @@ import (
 	_ "github.com/ubtr/ubt-go/blockchain/eth"
 	_ "github.com/ubtr/ubt-go/blockchain/trx"
 	"github.com/ubtr/ubt-go/cmd/cmdutil"
-	"github.com/ubtr/ubt-go/trx/common/hexutil"
 
 	am "github.com/ubtr/ubt-go/am"
 

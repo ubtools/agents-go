@@ -80,3 +80,17 @@ type Config struct {
 	// The host for the server to listen on
 	Host string `json:"host"`
 }
+
+func EitherSlice[T any](a, b []T) []T {
+	if len(a) > 0 {
+		return a
+	}
+	return b
+}
+
+func EitherStr(a, b string) string {
+	if a != "" {
+		return a
+	}
+	return b
+}

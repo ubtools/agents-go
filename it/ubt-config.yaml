@@ -3,4 +3,5 @@ chains:
     networks:
       SEPOLIA:
         testnet: true
-        rpcUrl: http://localhost:8545
+        rpcUrls: 
+          - url: http://localhost:8545

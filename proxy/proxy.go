@@ -5,19 +5,12 @@ import (
 	"errors"
 	"log/slog"
 
+	"github.com/ubtr/ubt-go/agent"
 	"github.com/ubtr/ubt-go/commons"
 
 	"github.com/ubtr/ubt/go/api/proto"
 	"github.com/ubtr/ubt/go/api/proto/services"
 )
-
-type IUbtAgentServer interface {
-	services.UbtChainServiceServer
-	services.UbtBlockServiceServer
-	services.UbtConstructServiceServer
-	services.UbtCurrencyServiceServer
-	String() string
-}
 
 type ServerProxy struct {
 	services.UnimplementedUbtChainServiceServer
@@ -25,10 +18,10 @@ type ServerProxy struct {
 	services.UnimplementedUbtConstructServiceServer
 	services.UnimplementedUbtCurrencyServiceServer
 
-	servers map[string]IUbtAgentServer
+	servers map[string]agent.UbtAgent
 }
 
-func InitServerProxy(servers map[string]IUbtAgentServer) *ServerProxy {
+func InitServerProxy(servers map[string]agent.UbtAgent) *ServerProxy {
 	var srv = ServerProxy{servers: servers}
 	return &srv
 }
@@ -76,9 +69,8 @@ func (s *ServerProxy) ListBlocks(in *services.ListBlocksRequest, res services.Ub
 		return ErrChainIdRequired
 	}
 	chainId := commons.ChainIdToString(in.ChainId)
-	slog.Debug("ListBlocks", "chainId", chainId)
+	slog.Debug("ListBlocks", "chain", chainId)
 	if srv, ok := s.servers[chainId]; ok {
-		slog.Debug("ListBlocks", "server", srv.String())
 		return srv.ListBlocks(in, res)
 	}
 	return ErrChainNotSupported

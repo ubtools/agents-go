@@ -7,8 +7,8 @@ import (
 	"github.com/ubtr/ubt-go/blockchain"
 	rpcerrors "github.com/ubtr/ubt-go/commons/errors"
 	"github.com/ubtr/ubt-go/eth/contracts/erc20"
+	"github.com/ubtr/ubt-go/eth/rpc"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ubtr/ubt/go/api/proto"
 	"github.com/ubtr/ubt/go/api/proto/services"
 	"google.golang.org/grpc/codes"
@@ -44,20 +44,24 @@ func (srv *EthServer) GetCurrency(ctx context.Context, req *services.GetCurrency
 		}
 		// erc20 token
 		// retreive token info
-		tokenInst, err := erc20.NewErc20(common.HexToAddress(currencyId.Address), srv.C)
+		addr, err := srv.AddressFromString(currencyId.Address)
+		if err != nil {
+			return nil, err
+		}
+		tokenInst, err := erc20.NewErc20(addr, rpc.AdoptClient(srv.C))
 		if err != nil {
 			srv.Log.Error("Failed to create token instance", "err", err)
-			return nil, rpcerrors.INVALID_CURRENCY
+			return nil, rpcerrors.ErrInvalidCurrency
 		}
 		symbol, err := tokenInst.Symbol(nil)
 		if err != nil {
 			srv.Log.Error("Failed to get token symbol", "err", err)
-			return nil, rpcerrors.INVALID_CURRENCY
+			return nil, rpcerrors.ErrInvalidCurrency
 		}
 		decimals, err := tokenInst.Decimals(nil)
 		if err != nil {
 			srv.Log.Error("Failed to get token decimals", "err", err)
-			return nil, rpcerrors.INVALID_CURRENCY
+			return nil, rpcerrors.ErrInvalidCurrency
 		}
 		var ret = &proto.Currency{
 			Id:       req.Id,
