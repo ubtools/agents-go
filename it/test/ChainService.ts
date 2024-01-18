@@ -23,7 +23,7 @@ describe("ChainService", () => {
     jsonRpcSrv = new JsonRpcServer({hostname: "localhost", port: 8545, provider: hre.network.provider})
     jsonRpcSrv.listen()
     agent = new UbtAgent();
-    const l = await agent.start("Listening at");
+    const l = await agent.start("API listening at");
     log(`agent started ${agent.proc?.pid}`);
     client = new UbtClient("localhost:50051")
   });
