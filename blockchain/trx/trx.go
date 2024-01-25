@@ -14,6 +14,7 @@ import (
 
 const CODE_STR = "TRX"
 const CODE_NUM = 195
+const DECIMALS = 6
 const TronBytePrefix = byte(0x41)
 
 type Address []byte
@@ -94,6 +95,8 @@ func ValidateAddress(address string) bool {
 var Instance = b.Blockchain{
 	Type:            CODE_STR,
 	TypeNum:         CODE_NUM,
+	Decimals:        DECIMALS,
+	SignatureType:   eth.Instance.SignatureType,
 	GenerateAccount: TronRandomKey,
 	ValidateAddress: ValidateAddress,
 	RecoverAddress:  RecoverAddress,
