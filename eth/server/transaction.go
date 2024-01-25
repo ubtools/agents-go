@@ -2,6 +2,7 @@ package server
 
 import (
 	"log/slog"
+	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -59,8 +60,11 @@ func (c *TxConverter) Convert(ethTx *ethtypes.RpcTx, logs []types.Log) (*proto.T
 }
 
 func (c *TxConverter) ConvertNativeTransfer(ethTx *ethtypes.RpcTx) (*proto.Transfer, error) {
+	trfId := append(ethTx.TxHash.Bytes(), 0)
 	return &proto.Transfer{
-		TxId:   ethTx.Tx.Hash().Bytes(),
+		Id:     trfId,
+		TxId:   ethTx.TxHash.Bytes(),
+		OpId:   trfId,
 		From:   c.Srv.AddressToString(ethTx.TxExtraInfo.From),
 		To:     c.Srv.AddressToString(ethTx.Tx.To()),
 		Status: 1,
@@ -69,11 +73,6 @@ func (c *TxConverter) ConvertNativeTransfer(ethTx *ethtypes.RpcTx) (*proto.Trans
 }
 
 func (c *TxConverter) ConvertERC20Transfer(ethTx *ethtypes.RpcTx, logs []types.Log) ([]*proto.Transfer, error) {
-	//logs, err := c.Client.FilterLogs(*c.Ctx, ethereum.FilterQuery{BlockHash: ethTx.BlockHash})
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	var transfers []*proto.Transfer
 	for _, log := range logs {
 		if len(log.Topics) > 2 && strings.HasSuffix(log.Topics[0].Hex(), Erc20Transfer) {
@@ -92,9 +91,11 @@ func (c *TxConverter) DecodeLogAsTransfer(ethTx *ethtypes.RpcTx, log types.Log) 
 	currencyId := c.Srv.AddressToString(&log.Address)
 	fromAddr := common.BytesToAddress(log.Topics[1].Bytes())
 	toAddr := common.BytesToAddress(log.Topics[2].Bytes())
+	trfId := append(ethTx.TxHash.Bytes(), big.NewInt(int64(log.TxIndex)).Bytes()...)
 	return &proto.Transfer{
-		TxId:   ethTx.Tx.Hash().Bytes(),
-		OpId:   log.TxHash.Bytes(),
+		Id:     trfId,
+		TxId:   ethTx.TxHash.Bytes(),
+		OpId:   trfId,
 		From:   c.Srv.AddressToString(&fromAddr),
 		To:     c.Srv.AddressToString(&toAddr),
 		Status: 0,
