@@ -15,8 +15,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const ETH_DECIMALS = 18
-
 func (srv *EthServer) GetCurrency(ctx context.Context, req *services.GetCurrencyRequest) (*proto.Currency, error) {
 	srv.Log.Debug("GetCurrency", "req", req)
 
@@ -32,7 +30,7 @@ func (srv *EthServer) GetCurrency(ctx context.Context, req *services.GetCurrency
 		return &proto.Currency{
 			Id:       req.Id,
 			Symbol:   srv.Config.ChainType,
-			Decimals: ETH_DECIMALS,
+			Decimals: uint32(srv.Chain.Decimals),
 		}, nil
 	} else if currencyId.Token == "" {
 		cached, err := srv.CurrencyCache.Get(ctx, req.Id)

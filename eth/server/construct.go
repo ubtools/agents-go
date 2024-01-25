@@ -86,7 +86,7 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 	intent := &services.TransactionIntent{
 		Id:            txId.Bytes(),
 		PayloadToSign: txId.Bytes(),
-		SignatureType: "secp256k1",
+		SignatureType: eth.Instance.SignatureType,
 		RawData:       rawTx,
 		EstimatedFee:  &proto.Uint256{Data: big.NewInt(int64(gasEstimate)).Bytes()},
 	}

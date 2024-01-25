@@ -29,13 +29,15 @@ func GetBlockchain(t string) *Blockchain {
 }
 
 type Blockchain struct {
-	Type            string
-	TypeNum         uint
-	Sign            Signer
-	Verify          Verifier
-	GenerateAccount KeyGenerator
-	ValidateAddress AddressValidator
-	RecoverAddress  AddressFromKeys
+	Type            string           // slip-044 coin name
+	TypeNum         uint             // slip-044 coin number
+	Decimals        uint             // native currency decimals
+	SignatureType   string           // e.g. secp256k1
+	Sign            Signer           // sign any arbitrary data
+	Verify          Verifier         // verify any arbitrary data
+	GenerateAccount KeyGenerator     // offline generate a new account/address
+	ValidateAddress AddressValidator // validate address
+	RecoverAddress  AddressFromKeys  // recover address from public and/or private key
 }
 
 func (b *Blockchain) String() string {

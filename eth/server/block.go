@@ -7,8 +7,8 @@ import (
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ubtr/ubt-go/agent"
 	"github.com/ubtr/ubt-go/commons/jsonrpc/client"
-	"github.com/ubtr/ubt-go/eth/config"
 	"github.com/ubtr/ubt-go/eth/rpc"
 	ethtypes "github.com/ubtr/ubt-go/eth/types"
 	"github.com/ubtr/ubt/go/api/proto"
@@ -16,7 +16,7 @@ import (
 )
 
 type BlockConverter struct {
-	Config *config.ChainConfig
+	Config *agent.ChainConfig
 	Client *client.BalancedClient
 	Ctx    context.Context
 	Srv    *EthServer

@@ -74,6 +74,10 @@ func (c *UCurrencyId) IsNative() bool {
 	return c.CurrencyId.IsNative()
 }
 
+func (c *UCurrencyId) IsERC20() bool {
+	return c.CurrencyId.Address != "" && c.CurrencyId.Token == ""
+}
+
 func (c *UCurrencyId) Normalize() UCurrencyId {
 	return UCurrencyId{
 		Chain:      c.Chain.Normalize(),

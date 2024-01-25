@@ -14,6 +14,7 @@ import (
 
 const CODE_STR = "ETH"
 const CODE_NUM = 60
+const DECIMALS = 18
 
 func AddressFromPublicKey(publicKey []byte) common.Address {
 	address := common.BytesToAddress(crypto.Keccak256(publicKey[1:])[12:])
@@ -74,6 +75,8 @@ func VerifyData(data []byte, sig []byte, pk []byte) bool {
 var Instance = b.Blockchain{
 	Type:            CODE_STR,
 	TypeNum:         CODE_NUM,
+	Decimals:        DECIMALS,
+	SignatureType:   "secp256k1",
 	GenerateAccount: RandomKey,
 	ValidateAddress: common.IsHexAddress,
 	RecoverAddress:  RecoverAddress,

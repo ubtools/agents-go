@@ -14,7 +14,6 @@ import (
 	"github.com/ubtr/ubt-go/commons"
 	"github.com/ubtr/ubt-go/commons/jsonrpc"
 	"github.com/ubtr/ubt-go/commons/jsonrpc/client"
-	"github.com/ubtr/ubt-go/eth/config"
 	ethrpc "github.com/ubtr/ubt-go/eth/rpc"
 	ethtypes "github.com/ubtr/ubt-go/eth/types"
 
@@ -32,7 +31,7 @@ import (
 )
 
 func init() {
-	agent.AgentFactories[eth.CODE_STR] = func(ctx context.Context, config *config.ChainConfig) agent.UbtAgent {
+	agent.AgentFactories[eth.CODE_STR] = func(ctx context.Context, config *agent.ChainConfig) agent.UbtAgent {
 		return InitServer(ctx, config)
 	}
 }
@@ -49,7 +48,7 @@ type EthServer struct {
 	services.UnimplementedUbtConstructServiceServer
 	services.UnimplementedUbtCurrencyServiceServer
 	C             *client.BalancedClient
-	Config        config.ChainConfig
+	Config        agent.ChainConfig
 	Chain         blockchain.Blockchain
 	ChainId       *big.Int
 	CurrencyCache cache.CacheInterface[*proto.Currency]
@@ -57,7 +56,7 @@ type EthServer struct {
 	Extensions    Extensions
 }
 
-func InitServer(ctx context.Context, config *config.ChainConfig) *EthServer {
+func InitServer(ctx context.Context, config *agent.ChainConfig) *EthServer {
 
 	chainIdStr := config.ChainType + ":" + config.ChainNetwork
 	logger := slog.With("chain", chainIdStr)

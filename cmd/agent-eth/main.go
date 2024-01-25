@@ -23,7 +23,6 @@ import (
 	_ "github.com/ubtr/ubt-go/blockchain/trx"
 
 	"github.com/ubtr/ubt-go/cmd/cmdutil"
-	"github.com/ubtr/ubt-go/eth/config"
 
 	_ "github.com/ubtr/ubt-go/eth/server"
 	"github.com/ubtr/ubt-go/proxy"
@@ -95,7 +94,7 @@ func main() {
 				log.Fatalf("failed to listen: %v", err)
 			}
 
-			config := config.LoadConfig(cCtx.String("config"))
+			config := agent.LoadConfig(cCtx.String("config"))
 			slog.Debug(fmt.Sprintf("Config: %+v", config))
 
 			srv := InitServerProxy(config.Chains)
@@ -147,12 +146,12 @@ func startMetricsListener(addr string) {
 	http.ListenAndServe(addr, nil)
 }
 
-func InitServerProxy(configs map[string]config.ChainTypeConfig) *proxy.ServerProxy {
+func InitServerProxy(configs map[string]agent.ChainTypeConfig) *proxy.ServerProxy {
 	servers := make(map[string]agent.UbtAgent)
 	for k, v := range configs {
 		var foundAgents []struct {
 			factory agent.UbtAgentFactory
-			config  config.ChainConfig
+			config  agent.ChainConfig
 		}
 		for nk, nv := range v.Networks {
 			nv.ChainType = k
@@ -165,7 +164,7 @@ func InitServerProxy(configs map[string]config.ChainTypeConfig) *proxy.ServerPro
 			}
 			foundAgents = append(foundAgents, struct {
 				factory agent.UbtAgentFactory
-				config  config.ChainConfig
+				config  agent.ChainConfig
 			}{factory: factory, config: nv})
 		}
 		if len(foundAgents) == 0 {

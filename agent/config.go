@@ -1,4 +1,4 @@
-package config
+package agent
 
 import (
 	"os"
@@ -13,17 +13,18 @@ type ChainTypeConfig struct {
 	DefaultNetwork string                 `yaml:"defaultNetwork"`
 }
 
-type RpcUrlConfig struct {
+type UrlConfig struct {
 	Name     string `yaml:"name"`
 	Url      string `yaml:"url"`
 	LimitRps uint   `yaml:"limitRps"`
 }
 
 type ChainConfig struct {
-	Testnet      bool           `yaml:"testnet"`
-	ChainType    string         `yaml:"-"`
-	ChainNetwork string         `yaml:"-"`
-	RpcUrls      []RpcUrlConfig `yaml:"rpcUrls"`
+	Testnet      bool        `yaml:"testnet"`
+	ChainType    string      `yaml:"-"`
+	ChainNetwork string      `yaml:"-"`
+	RpcUrls      []UrlConfig `yaml:"rpcUrls"`
+	HttpUrls     []UrlConfig `yaml:"httpUrls"`
 }
 
 type Config struct {

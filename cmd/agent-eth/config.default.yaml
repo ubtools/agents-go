@@ -17,6 +17,8 @@ chains:
         testnet: true
         rpcUrls:
           - url: https://nile.trongrid.io/jsonrpc
+        httpUrls:
+          - url: https://nile.trongrid.io
   BNB:
     networks:
       TESTNET:
