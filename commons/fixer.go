@@ -14,6 +14,12 @@ func (e *ErrFieldNotExist) Error() string {
 	return fmt.Sprintf("field %s not found", strings.Join(e.Path, "."))
 }
 
+// FixJsonFields applies a series of fixes to the JSON fields in the input byte slice.
+// To inject into UnmarshalJSON method of wrapper struct
+// It takes a variadic number of fixes, where each fix is a pair of path and fix function.
+// The path is a slice of strings representing the path to the field in the JSON structure.
+// If ignoreMissing is set to true, the function will ignore fields that do not exist in the JSON structure.
+// The function returns the modified JSON byte slice and an error if any occurred during the fixing process.
 func FixJsonFields(input []byte, ignoreMissing bool, fixes ...any) ([]byte, error) {
 	if len(fixes)%2 != 0 {
 		return nil, fmt.Errorf("fixes must be pairs of path and fix function")
