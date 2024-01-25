@@ -11,7 +11,7 @@ import (
 	"github.com/ubtr/ubt-go/agent"
 	"github.com/ubtr/ubt-go/blockchain"
 	"github.com/ubtr/ubt-go/blockchain/trx"
-	rpcerrors "github.com/ubtr/ubt-go/commons/errors"
+	"github.com/ubtr/ubt-go/commons/rpcerrors"
 	"github.com/ubtr/ubt-go/eth/contracts/erc20"
 	"github.com/ubtr/ubt-go/eth/server"
 	"github.com/ubtr/ubt/go/api/proto"

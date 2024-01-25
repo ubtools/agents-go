@@ -5,7 +5,7 @@ import (
 
 	"github.com/eko/gocache/lib/v4/store"
 	"github.com/ubtr/ubt-go/blockchain"
-	rpcerrors "github.com/ubtr/ubt-go/commons/errors"
+	"github.com/ubtr/ubt-go/commons/rpcerrors"
 	"github.com/ubtr/ubt-go/eth/contracts/erc20"
 	"github.com/ubtr/ubt-go/eth/rpc"
 

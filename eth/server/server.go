@@ -14,14 +14,13 @@ import (
 	"github.com/ubtr/ubt-go/commons"
 	"github.com/ubtr/ubt-go/commons/jsonrpc"
 	"github.com/ubtr/ubt-go/commons/jsonrpc/client"
+	"github.com/ubtr/ubt-go/commons/rpcerrors"
 	ethrpc "github.com/ubtr/ubt-go/eth/rpc"
 	ethtypes "github.com/ubtr/ubt-go/eth/types"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/ubtr/ubt-go/blockchain"
 	ubtcache "github.com/ubtr/ubt-go/commons/cache"
@@ -114,7 +113,7 @@ func (srv *EthServer) AddressToString(address *common.Address) string {
 func (srv *EthServer) GetChain(ctx context.Context, chainId *proto.ChainId) (*proto.Chain, error) {
 	srv.Log.Debug("GetChain")
 	if chainId.Type != srv.Chain.Type {
-		return nil, status.Errorf(codes.NotFound, "unsupported chain type")
+		return nil, rpcerrors.ErrInvalidChainId
 	}
 	bip44Id := uint32(srv.Chain.TypeNum)
 	return &proto.Chain{
@@ -195,7 +194,7 @@ func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 	endNumber = min(endNumber, topBlockNumber+1)
 	srv.Log.Debug("Block range", "startNumber", req.StartNumber, "endNumber", endNumber)
 	if req.StartNumber >= endNumber {
-		return status.Errorf(codes.InvalidArgument, "no more blocks: %d", req.StartNumber)
+		return rpcerrors.ErrBlockOutOfRange
 	}
 
 	blockReqs := []*jsonrpc.RpcCall[ethtypes.HeaderWithBody]{}
