@@ -11,6 +11,7 @@ import (
 	ubt_am "github.com/ubtr/ubt/go/api/proto/services/am"
 
 	"github.com/ubtr/ubt-go/blockchain"
+	"github.com/ubtr/ubt-go/commons/rpcerrors"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -124,7 +125,7 @@ func (s *AMServer) GetAccount(ctx context.Context, req *ubt_am.GetAccountRequest
 		}
 		return &ubt_am.GetAccountResponse{Address: acc.Address, Name: name}, nil
 	} else {
-		res := s.db.First(&acc, req.Address)
+		res := s.db.First(&acc, "address = ?", req.Address)
 
 		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
 			return &ubt_am.GetAccountResponse{}, nil
@@ -159,7 +160,7 @@ func (s *AMServer) ListAccounts(ctx context.Context, req *ubt_am.ListAccountsReq
 func (s *AMServer) SignPayload(ctx context.Context, req *ubt_am.SignPayloadRequest) (*ubt_am.SignPayloadResponse, error) {
 	bc := blockchain.GetBlockchain(req.ChainType)
 	if bc == nil {
-		return nil, errors.New("NO SUCH NETWORK")
+		return nil, rpcerrors.ErrInvalidChainId
 	}
 	var account Account
 
@@ -169,7 +170,7 @@ func (s *AMServer) SignPayload(ctx context.Context, req *ubt_am.SignPayloadReque
 			return nil, res.Error
 		}
 	} else {
-		res := s.db.First(&account, req.Address)
+		res := s.db.First(&account, "address = ?", req.Address)
 		if res.Error != nil {
 			return nil, res.Error
 		}
