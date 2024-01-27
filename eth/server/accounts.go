@@ -11,8 +11,8 @@ import (
 
 func (srv *EthServer) GetAccount(ctx context.Context, req *services.GetAccountRequest) (*proto.Account, error) {
 	return &proto.Account{
-		Id:         req.Address,
-		IsContract: false, //FIXME
+		Id:   req.Address,
+		Type: uint32(proto.Account_STANDARD),
 	}, nil
 }
 func (srv *EthServer) DeriveAccount(ctx context.Context, req *services.DeriveAccountRequest) (*proto.Account, error) {

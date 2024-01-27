@@ -22,6 +22,7 @@ type Account struct {
 	NetworkType string
 	Address     string `gorm:"primaryKey"`
 	PK          []byte
+	PublicKey   []byte
 }
 
 func migrate(db *gorm.DB) *gorm.DB {
@@ -44,12 +45,16 @@ func GormOpenRetry(dsn string, opts ...gorm.Option) (*gorm.DB, error) {
 	return nil, err
 }
 
-func InitAMServier(dsn string, encKey []byte) *AMServer {
+func InitAMServer(dsn string, encKey []byte) *AMServer {
 	db, err := GormOpenRetry(dsn, &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
 
+	return internalInitAmServer(db, encKey)
+}
+
+func internalInitAmServer(db *gorm.DB, encKey []byte) *AMServer {
 	var srv = AMServer{db: db, encryptionKey: GetEncryption(encKey)}
 	return &srv
 }
@@ -61,13 +66,14 @@ type AMServer struct {
 }
 
 func (s *AMServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAccountRequest) (*ubt_am.CreateAccountResponse, error) {
-
+	slog.Debug("CreateAccount", "req", req)
 	bc := blockchain.GetBlockchain(req.ChainType)
 	if bc == nil {
-		return nil, errors.New("NO SUCH NETWORK: '" + req.ChainType + "'")
+		return nil, rpcerrors.ErrInvalidChainId
 	}
 
 	var encryptedKey []byte
+	var publicKey []byte
 	var err error
 	var address string
 
@@ -80,6 +86,7 @@ func (s *AMServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAccountR
 		if err != nil {
 			return nil, err
 		}
+
 		slog.Debug("AddressFromPK", "chainType", req.ChainType, "address", address)
 
 	} else {
@@ -92,6 +99,7 @@ func (s *AMServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAccountR
 		if err != nil {
 			return nil, err
 		}
+		publicKey = kp.PublicKey
 		address = kp.Address
 	}
 
@@ -105,17 +113,19 @@ func (s *AMServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAccountR
 		return nil, err
 	}
 	return &ubt_am.CreateAccountResponse{
-		Address: address,
+		Address:   address,
+		Name:      req.Name,
+		PublicKey: publicKey,
 	}, nil
 }
 
-func (s *AMServer) GetAccount(ctx context.Context, req *ubt_am.GetAccountRequest) (*ubt_am.GetAccountResponse, error) {
+func (s *AMServer) GetAccount(ctx context.Context, req *ubt_am.GetStoredAccountRequest) (*ubt_am.GetStoredAccountResponse, error) {
 	slog.Debug("GetAccount", "req", req)
 	var acc Account
 	if req.Name != "" {
 		res := s.db.Where("name = ?", req.Name).First(&acc)
 		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
-			return &ubt_am.GetAccountResponse{}, nil
+			return &ubt_am.GetStoredAccountResponse{}, nil
 		} else if res.Error != nil {
 			return nil, res.Error
 		}
@@ -123,12 +133,12 @@ func (s *AMServer) GetAccount(ctx context.Context, req *ubt_am.GetAccountRequest
 		if acc.Name != nil {
 			name = *acc.Name
 		}
-		return &ubt_am.GetAccountResponse{Address: acc.Address, Name: name}, nil
+		return &ubt_am.GetStoredAccountResponse{Address: acc.Address, Name: name, PublicKey: acc.PublicKey}, nil
 	} else {
 		res := s.db.First(&acc, "address = ?", req.Address)
 
 		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
-			return &ubt_am.GetAccountResponse{}, nil
+			return &ubt_am.GetStoredAccountResponse{}, nil
 		} else if res.Error != nil {
 			return nil, res.Error
 		}
@@ -136,13 +146,13 @@ func (s *AMServer) GetAccount(ctx context.Context, req *ubt_am.GetAccountRequest
 		if acc.Name != nil {
 			name = *acc.Name
 		}
-		return &ubt_am.GetAccountResponse{Address: acc.Address, Name: name}, nil
+		return &ubt_am.GetStoredAccountResponse{Address: acc.Address, Name: name, PublicKey: acc.PublicKey}, nil
 	}
 }
 
 func (s *AMServer) ListAccounts(ctx context.Context, req *ubt_am.ListAccountsRequest) (*ubt_am.ListAccountsResponse, error) {
 	var accounts []Account
-	res := s.db.Where("name like ?", "%"+req.NameFilter).Find(&accounts)
+	res := s.db.Where("name like ?", req.NameFilter+"%").Find(&accounts)
 	if res.Error != nil {
 		return nil, res.Error
 	}

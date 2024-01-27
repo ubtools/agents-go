@@ -13,6 +13,7 @@ import { RpcError } from "@protobuf-ts/runtime-rpc";
 
 import debug from "debug"
 import { Block, CurrencyId, FinalityStatus, ListBlocksRequest_IncludeFlags, hexutils, uint256, uint256utils } from "@ubtr/sdk";
+import { ETH_CHAIN_ID } from "../scripts/testfixtures";
 const log = debug("ubt:test:ConstructService")
 
 let agent: UbtAgent;
@@ -57,7 +58,7 @@ describe("ConstructService", () => {
     const f = await loadFixture(deployTestERC20Token)
 
     const intent = await client.constructService().createTransfer({
-      chainId: {type: "ETH", network: "SEPOLIA"},
+      chainId: ETH_CHAIN_ID,
       from: getAddress(f.owner.account.address),
       to: getAddress(f.otherAccount.account.address),
       amount: {currencyId: `${getAddress(f.token.address)}`, value: uint256utils.fromBigInt(1000n)}

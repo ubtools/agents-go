@@ -69,7 +69,7 @@ func main() {
 					if err != nil {
 						log.Fatalf("failed to listen: %v", err)
 					}
-					srv := am.InitAMServier(cCtx.String("db"), []byte(cCtx.String("enckey")))
+					srv := am.InitAMServer(cCtx.String("db"), []byte(cCtx.String("enckey")))
 
 					grpcPanicRecoveryHandler := func(p any) (err error) {
 						panic(err)
@@ -120,7 +120,7 @@ func main() {
 					},
 				},
 				Action: func(cCtx *cli.Context) error {
-					srv := am.InitAMServier(cCtx.String("db"), []byte(cCtx.String("enckey")))
+					srv := am.InitAMServer(cCtx.String("db"), []byte(cCtx.String("enckey")))
 					res, err := srv.CreateAccount(context.TODO(), &ubt_am.CreateAccountRequest{ChainType: cCtx.String("chain"), Name: cCtx.String("name")})
 					if err != nil {
 						return err

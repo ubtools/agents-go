@@ -11,6 +11,7 @@ import { UbtClient } from "../scripts/client";
 import { arrayFromAsync } from "../scripts/utils";
 import { RpcError } from "@protobuf-ts/runtime-rpc";
 import debug from "debug"
+import { ETH_CHAIN_ID } from "../scripts/testfixtures";
 
 const log = debug("ubt:test:ChainService")
 
@@ -42,15 +43,15 @@ describe("ChainService", () => {
    
     log(chains)
     expect(chains.length).eq(1);
-    expect(chains[0].id?.type).eq("ETH");
-    expect(chains[0].id?.network).eq("SEPOLIA");
+    expect(chains[0].id?.type).eq(ETH_CHAIN_ID.type);
+    expect(chains[0].id?.network).eq(ETH_CHAIN_ID.network);
   });
   it("Should return list of chains filtered by type", async () => {
-    const chains = await arrayFromAsync(client.chainService().listChains({type: "ETH"}).responses);
+    const chains = await arrayFromAsync(client.chainService().listChains({type: ETH_CHAIN_ID.type}).responses);
    
     expect(chains.length).eq(1);
-    expect(chains[0].id?.type).eq("ETH");
-    expect(chains[0].id?.network).eq("SEPOLIA");
+    expect(chains[0].id?.type).eq(ETH_CHAIN_ID.type);
+    expect(chains[0].id?.network).eq(ETH_CHAIN_ID.network);
   });
 
   it("Should return empty list when filtered by non-existing chain type", async () => {
@@ -60,10 +61,10 @@ describe("ChainService", () => {
   });
 
   it("Should return chain by id", async () => {
-    const chain = await client.chainService().getChain({type: "ETH", network: "SEPOLIA"});
+    const chain = await client.chainService().getChain(ETH_CHAIN_ID);
    
-    expect(chain.response.id?.type).eq("ETH");
-    expect(chain.response.id?.network).eq("SEPOLIA");
+    expect(chain.response.id?.type).eq(ETH_CHAIN_ID.type);
+    expect(chain.response.id?.network).eq(ETH_CHAIN_ID.network);
   });
 
   it("Should throw 'not found' for wrong chain id", async () => {

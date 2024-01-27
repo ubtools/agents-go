@@ -57,7 +57,7 @@ func (s *AMPKCSServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAcco
 	return &ubt_am.CreateAccountResponse{Address: addr.String()}, status.Errorf(codes.Unimplemented, "method CreateAccount not implemented")
 }
 
-func (s *AMPKCSServer) GetAccount(ctx context.Context, req *ubt_am.GetAccountRequest) (*ubt_am.GetAccountResponse, error) {
+func (s *AMPKCSServer) GetAccount(ctx context.Context, req *ubt_am.GetStoredAccountRequest) (*ubt_am.GetStoredAccountResponse, error) {
 	signer, err := s.pkcsCtx.FindKeyPair([]byte(toKeyId("TBD", req.Name)), nil)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (s *AMPKCSServer) GetAccount(ctx context.Context, req *ubt_am.GetAccountReq
 			return nil, err
 		}
 
-		return &ubt_am.GetAccountResponse{Address: address}, nil
+		return &ubt_am.GetStoredAccountResponse{Address: address}, nil
 	}
 
 	return nil, status.Errorf(codes.NotFound, "Account not found")

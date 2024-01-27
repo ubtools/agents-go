@@ -7,7 +7,7 @@ require (
 	github.com/ethereum/go-ethereum v1.12.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/prometheus/client_golang v1.14.0
-	github.com/ubtr/ubt/go v0.0.8
+	github.com/ubtr/ubt/go v0.0.13
 	github.com/urfave/cli/v2 v2.25.7
 	google.golang.org/grpc v1.58.2
 	gorm.io/driver/postgres v1.5.4
@@ -19,9 +19,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
-	github.com/fjl/gencodec v0.0.0-20230517082657-f9840df7b83e // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/garslo/gogen v0.0.0-20170306192744-1d203ffc1f61 // indirect
 	github.com/golang/glog v1.1.0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -30,6 +28,7 @@ require (
 	github.com/jackc/pgx/v5 v5.4.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/mattn/go-sqlite3 v1.14.17 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/pkcs11 v1.0.3-0.20190429190417-a667d056470f // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -38,8 +37,6 @@ require (
 	github.com/prometheus/common v0.39.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/thales-e-security/pool v0.0.2 // indirect
-	golang.org/x/mod v0.11.0 // indirect
-	golang.org/x/tools v0.9.1 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 )
 
@@ -72,6 +69,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230920204549-e6e6cdab5c13 // indirect
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v3 v3.0.1
+	gorm.io/driver/sqlite v1.5.4
 )
 
 replace github.com/ThalesIgnite/crypto11 v1.2.5 => github.com/pdtgct/crypto11 v0.0.0-20221116022657-dec819409601

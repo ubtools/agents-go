@@ -13,6 +13,7 @@ import { RpcError } from "@protobuf-ts/runtime-rpc";
 
 import debug from "debug"
 import { Block, CurrencyId, FinalityStatus, ListBlocksRequest_IncludeFlags, hexutils, uint256, uint256utils } from "@ubtr/sdk";
+import { ETH_CHAIN_ID } from "../scripts/testfixtures";
 const log = debug("ubt:test:BlockService")
 
 let agent: UbtAgent;
@@ -22,8 +23,6 @@ let client: UbtClient;
 describe("BlockService", () => {
 
   async function deployTestERC20Token() {
-
-
     // Contracts are deployed using the first signer/account by default
     const [owner, otherAccount] = await hre.viem.getWalletClients();
 
@@ -60,7 +59,7 @@ describe("BlockService", () => {
 
   it("Should return list of blocks", async () => {
     const f = await loadFixture(deployTestERC20Token)
-    const blocks = await arrayFromAsync(client.blockService().listBlocks({chainId: {type: "ETH", network: "SEPOLIA"},
+    const blocks = await arrayFromAsync(client.blockService().listBlocks({chainId: ETH_CHAIN_ID,
       startNumber: 0n, finalityStatus: FinalityStatus.UNSPECIFIED, includes: ListBlocksRequest_IncludeFlags.FULL as number, count: 2n}).responses);
    
     log(blocks)
@@ -89,14 +88,14 @@ describe("BlockService", () => {
 
   it("Should fail on list block if start more than head", async () => {
     const f = await loadFixture(deployTestERC20Token)
-    await expect(arrayFromAsync(client.blockService().listBlocks({chainId: {type: "ETH", network: "SEPOLIA"},
+    await expect(arrayFromAsync(client.blockService().listBlocks({chainId: ETH_CHAIN_ID,
       startNumber: 3n, finalityStatus: FinalityStatus.UNSPECIFIED, includes: ListBlocksRequest_IncludeFlags.FULL as number, count: 2n}).responses))
       .rejectedWith(RpcError)
   });
 
   it("Should return block by id", async () => {
     const f = await loadFixture(deployTestERC20Token)
-    const blocks = await arrayFromAsync(client.blockService().listBlocks({chainId: {type: "ETH", network: "SEPOLIA"},
+    const blocks = await arrayFromAsync(client.blockService().listBlocks({chainId: ETH_CHAIN_ID,
       startNumber: 0n, finalityStatus: FinalityStatus.UNSPECIFIED, includes: ListBlocksRequest_IncludeFlags.FULL as number, count: 2n}).responses);
    
     log(blocks)
