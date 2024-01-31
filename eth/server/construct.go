@@ -34,13 +34,21 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 		return nil, err
 	}
 
-	var gasEstimate uint64 = 21000
+	toAddress, err := srv.AddressFromString(req.To)
+	if err != nil {
+		return nil, err
+	}
+	fromAddress, err := srv.AddressFromString(req.From)
+	if err != nil {
+		return nil, err
+	}
+
+	var gasEstimate uint64 = 21000 // native transfer
 
 	var tx *types.Transaction
 
-	srv.Log.Debug("gasPrice", "gasPrice", gasPrice.String())
 	if currencyId.IsNative() {
-		tx = types.NewTransaction(nonce, common.HexToAddress(req.To), big.NewInt(0).SetBytes(req.Amount.Value.Data), uint64(21000), gasPrice, nil)
+		tx = types.NewTransaction(nonce, toAddress, big.NewInt(0).SetBytes(req.Amount.Value.Data), uint64(21000), gasPrice, nil)
 		srv.Log.Debug("transfer native", "tx", tx)
 	} else if currencyId.IsErc20() {
 		transferFnSignature := []byte("transfer(address,uint256)")
@@ -48,8 +56,10 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 		hash.Write(transferFnSignature)
 		methodID := hash.Sum(nil)[:4]
 
-		tokenAddress := common.HexToAddress(currencyId.Address)
-		toAddress := common.HexToAddress(req.To)
+		tokenAddress, err := srv.AddressFromString(currencyId.Address)
+		if err != nil {
+			return nil, err
+		}
 
 		paddedAddress := common.LeftPadBytes(toAddress.Bytes(), 32)
 		paddedAmount := common.LeftPadBytes(big.NewInt(0).SetBytes(req.Amount.Value.Data).Bytes(), 32)
@@ -60,7 +70,7 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 
 		srv.Log.Debug("estimating gas", "from", req.From, "to", req.To, "tokenAddress", tokenAddress)
 		gasLimit, err := rpc.AdoptClient(srv.C).EstimateGas(ctx, ethereum.CallMsg{
-			From: common.HexToAddress(req.From),
+			From: fromAddress,
 			To:   &tokenAddress,
 			Data: data,
 		})
@@ -75,6 +85,8 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 		return nil, status.Errorf(codes.InvalidArgument, "invalid currency id: %s", req.Amount.CurrencyId)
 	}
 
+	srv.Log.Debug("Estimating", "gasPrice", gasPrice, "gasEstimate", gasEstimate)
+
 	txId := types.NewEIP155Signer(srv.ChainId).Hash(tx)
 
 	srv.Log.Debug("calculating txId", "txId", txId)
@@ -83,12 +95,14 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 		return nil, status.Errorf(codes.Internal, "failed to marshal tx: %v", err)
 	}
 
+	gasCost := big.NewInt(0).Mul(big.NewInt(0).SetUint64(gasEstimate), gasPrice)
+
 	intent := &services.TransactionIntent{
 		Id:            txId.Bytes(),
 		PayloadToSign: txId.Bytes(),
 		SignatureType: eth.Instance.SignatureType,
 		RawData:       rawTx,
-		EstimatedFee:  &proto.Uint256{Data: big.NewInt(int64(gasEstimate)).Bytes()},
+		EstimatedFee:  &proto.Uint256{Data: gasCost.Bytes()},
 	}
 
 	return intent, nil

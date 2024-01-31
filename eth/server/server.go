@@ -97,7 +97,14 @@ func (srv *EthServer) AddressFromString(address string) (common.Address, error) 
 	if srv.Extensions.AddressFromString != nil {
 		return srv.Extensions.AddressFromString(address)
 	}
-	return common.HexToAddress(address), nil
+	addrBytes, err := hexutil.Decode(address)
+	if err != nil {
+		return common.Address{}, rpcerrors.ArgError("address", err)
+	}
+	if len(addrBytes) != common.AddressLength {
+		return common.Address{}, rpcerrors.ArgError("address", fmt.Errorf("invalid address length %d", len(addrBytes)))
+	}
+	return common.BytesToAddress(addrBytes), nil
 }
 
 func (srv *EthServer) AddressToString(address *common.Address) string {
