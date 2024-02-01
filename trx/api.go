@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"math/big"
 	"net/http"
 )
 
@@ -65,7 +66,7 @@ type CreateTransactionRequest struct {
 type CreateTransactionResponse struct {
 	TxId       string          `json:"txID"`
 	RawData    json.RawMessage `json:"raw_data"`
-	RawDataHex json.RawMessage `json:"raw_data_hex"`
+	RawDataHex string          `json:"raw_data_hex"`
 	Error      string          `json:"error"`
 }
 
@@ -75,7 +76,16 @@ func (c *TrxApiClient) CreateTransaction(ctx context.Context, req CreateTransact
 	return res, err
 }
 
-type TriggerSmartContractRequest struct {
+type RawTxData struct {
+	Contract      json.RawMessage `json:"contract,omitempty"`
+	RefBlockBytes json.RawMessage `json:"ref_block_bytes,omitempty"`
+	RefBlockHash  json.RawMessage `json:"ref_block_hash,omitempty"`
+	Expiration    json.RawMessage `json:"expiration,omitempty"`
+	FeeLimit      uint64          `json:"fee_limit,omitempty"`
+	Timestamp     json.RawMessage `json:"timestamp,omitempty"`
+}
+
+type TriggerContractRequest struct {
 	OwnerAddress    string `json:"owner_address"`
 	ContractAddress string `json:"contract_address"`
 	FeeLimit        uint64 `json:"fee_limit"`
@@ -94,11 +104,31 @@ type TriggerSmartContractResponse struct {
 	Transaction struct {
 		TxId       string          `json:"txID"`
 		RawData    json.RawMessage `json:"raw_data"`
-		RawDataHex json.RawMessage `json:"raw_data_hex"`
+		RawDataHex string          `json:"raw_data_hex"`
 	} `json:"transaction"`
 }
 
-func (c *TrxApiClient) TriggerSmartContract(ctx context.Context, req TriggerSmartContractRequest) (TriggerSmartContractResponse, error) {
+type TriggerConstantContractResponse struct {
+	Result struct {
+		Result  bool   `json:"result"`
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	} `json:"result"`
+	EnergyUsed  uint64 `json:"energy_used"`
+	Transaction struct {
+		TxId       string    `json:"txID"`
+		RawData    RawTxData `json:"raw_data"`
+		RawDataHex string    `json:"raw_data_hex"`
+	} `json:"transaction"`
+}
+
+func (c *TrxApiClient) TriggerConstantContract(ctx context.Context, req TriggerContractRequest) (TriggerConstantContractResponse, error) {
+	var res TriggerConstantContractResponse
+	err := c.DoPost(ctx, "/wallet/triggerconstantcontract", req, &res)
+	return res, err
+}
+
+func (c *TrxApiClient) TriggerSmartContract(ctx context.Context, req TriggerContractRequest) (TriggerSmartContractResponse, error) {
 	var res TriggerSmartContractResponse
 	err := c.DoPost(ctx, "/wallet/triggersmartcontract", req, &res)
 	return res, err
@@ -120,5 +150,35 @@ type BroadcastTransactionResponse struct {
 func (c *TrxApiClient) BroadcastTransaction(ctx context.Context, req BroadcastTransactionRequest) (BroadcastTransactionResponse, error) {
 	var res BroadcastTransactionResponse
 	err := c.DoPost(ctx, "/wallet/broadcasttransaction", req, &res)
+	return res, err
+}
+
+type ChainParameters struct {
+	BandwidthPrice *big.Int
+	EnergyPrice    *big.Int
+}
+
+func (c *TrxApiClient) GetChainParameters(ctx context.Context) (ChainParameters, error) {
+	var res ChainParameters
+	type parameterKeyValue struct {
+		Key   string `json:"key"`
+		Value int64  `json:"value"`
+	}
+	type chainParametersResponse struct {
+		Result []parameterKeyValue `json:"chainParameter"`
+	}
+	var internal chainParametersResponse
+	err := c.DoPost(ctx, "/wallet/getchainparameters", nil, &internal)
+	if err != nil {
+		return res, err
+	}
+	for _, kv := range internal.Result {
+		switch kv.Key {
+		case "getTransactionFee":
+			res.BandwidthPrice = big.NewInt(kv.Value)
+		case "getEnergyFee":
+			res.EnergyPrice = big.NewInt(kv.Value)
+		}
+	}
 	return res, err
 }

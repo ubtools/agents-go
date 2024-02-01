@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/shengdoushi/base58"
 	"github.com/ubtr/ubt-go/agent"
 	"github.com/ubtr/ubt-go/blockchain"
 	"github.com/ubtr/ubt-go/blockchain/trx"
+	"github.com/ubtr/ubt-go/commons/cache"
 	"github.com/ubtr/ubt-go/commons/rpcerrors"
 	"github.com/ubtr/ubt-go/eth/contracts/erc20"
 	"github.com/ubtr/ubt-go/eth/server"
@@ -45,7 +47,8 @@ var TrxExtensions = server.Extensions{
 
 func InitServer(ctx context.Context, config *agent.ChainConfig) *TrxAgent {
 	agent := &TrxAgent{
-		EthServer: *server.InitServer(ctx, config),
+		EthServer:      *server.InitServer(ctx, config),
+		feePricesCache: cache.NewSimpleExpirationCache[feePrices](10 * time.Second),
 	}
 	if config.HttpUrls == nil || len(config.HttpUrls) == 0 || config.HttpUrls[0].Url == "" {
 		agent.Log.Warn("no http url provided - trx requires http api to create/sign txs")
@@ -58,9 +61,34 @@ func InitServer(ctx context.Context, config *agent.ChainConfig) *TrxAgent {
 	return agent
 }
 
+type feePrices struct {
+	energyPrice    *big.Int
+	bandwidthPrice *big.Int
+}
+
 type TrxAgent struct {
 	server.EthServer
-	client *TrxApiClient
+	client         *TrxApiClient
+	feePricesCache *cache.SimpleExpirationCache[feePrices]
+}
+
+// get energy and bandwidth prices in suns
+func (srv *TrxAgent) GetFeePrices(ctx context.Context) (feePrices, error) {
+	prices, ok := srv.feePricesCache.Get()
+	if ok {
+		return prices, nil
+	} else {
+		prices, err := srv.client.GetChainParameters(ctx)
+		if err != nil {
+			return feePrices{}, err
+		}
+		convertedPrices := feePrices{
+			energyPrice:    prices.EnergyPrice,
+			bandwidthPrice: prices.BandwidthPrice,
+		}
+		srv.feePricesCache.Set(convertedPrices)
+		return convertedPrices, nil
+	}
 }
 
 func (srv *TrxAgent) CreateTransfer(ctx context.Context, req *services.CreateTransferRequest) (*services.TransactionIntent, error) {
@@ -75,7 +103,6 @@ func (srv *TrxAgent) CreateTransfer(ctx context.Context, req *services.CreateTra
 	}
 
 	if curId.IsNative() {
-
 		res, err := srv.client.CreateTransaction(ctx, CreateTransactionRequest{
 			OwnerAddress: req.From,
 			ToAddress:    req.To,
@@ -95,12 +122,18 @@ func (srv *TrxAgent) CreateTransfer(ctx context.Context, req *services.CreateTra
 			return nil, err
 		}
 
+		feePrices, err := srv.GetFeePrices(ctx)
+		if err != nil {
+			return nil, err
+		}
+		bandwidthEstimate := len(res.RawDataHex) / 2 // 1 byte = 2 hex chars
+
 		return &services.TransactionIntent{
 			Id:            common.Hex2Bytes(res.TxId),
 			SignatureType: trx.Instance.SignatureType,
 			PayloadToSign: common.Hex2Bytes(res.TxId),
 			RawData:       res.RawData,
-			EstimatedFee:  &proto.Uint256{Data: []byte{0}},
+			EstimatedFee:  &proto.Uint256{Data: big.NewInt(0).Mul(big.NewInt(int64(bandwidthEstimate)), feePrices.bandwidthPrice).Bytes()},
 		}, nil
 
 	} else if curId.IsErc20() {
@@ -120,7 +153,7 @@ func (srv *TrxAgent) CreateTransfer(ctx context.Context, req *services.CreateTra
 			return nil, err
 		}
 
-		res, err := srv.client.TriggerSmartContract(ctx, TriggerSmartContractRequest{
+		estimateRes, err := srv.client.TriggerConstantContract(ctx, TriggerContractRequest{
 			OwnerAddress:    req.From,
 			ContractAddress: curId.Address,
 			FeeLimit:        ERC20_FEE_LIMIT,
@@ -133,16 +166,43 @@ func (srv *TrxAgent) CreateTransfer(ctx context.Context, req *services.CreateTra
 			return nil, err
 		}
 
-		if !res.Result.Result {
-			return nil, fmt.Errorf("failed to create tx: %s %s", res.Result.Code, res.Result.Message)
+		if !estimateRes.Result.Result {
+			return nil, fmt.Errorf("failed to create tx: %s %s", estimateRes.Result.Code, estimateRes.Result.Message)
+		}
+
+		feePrices, err := srv.GetFeePrices(ctx)
+		if err != nil {
+			return nil, err
+		}
+		bandwidthEstimate := len(estimateRes.Transaction.RawDataHex) / 2 // 1 byte = 2 hex chars
+
+		energyEstimate := estimateRes.EnergyUsed
+		feeEstimate := big.NewInt(0).Mul(big.NewInt(int64(bandwidthEstimate)), feePrices.bandwidthPrice)
+		feeEstimate.Add(feeEstimate, big.NewInt(0).Mul(big.NewInt(int64(energyEstimate)), feePrices.energyPrice))
+
+		triggerRes, err := srv.client.TriggerSmartContract(ctx, TriggerContractRequest{
+			OwnerAddress:    req.From,
+			ContractAddress: curId.Address,
+			FeeLimit:        ERC20_FEE_LIMIT,
+			CallValue:       0,
+			Data:            common.Bytes2Hex(data),
+			Visible:         true,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		if !triggerRes.Result.Result {
+			return nil, fmt.Errorf("failed to create tx: %s %s", triggerRes.Result.Code, triggerRes.Result.Message)
 		}
 
 		return &services.TransactionIntent{
-			Id:            common.Hex2Bytes(res.Transaction.TxId),
+			Id:            common.Hex2Bytes(triggerRes.Transaction.TxId),
 			SignatureType: trx.Instance.SignatureType,
-			PayloadToSign: common.Hex2Bytes(res.Transaction.TxId),
-			RawData:       res.Transaction.RawData,
-			EstimatedFee:  &proto.Uint256{Data: []byte{0}},
+			PayloadToSign: common.Hex2Bytes(triggerRes.Transaction.TxId),
+			RawData:       triggerRes.Transaction.RawData,
+			EstimatedFee:  &proto.Uint256{Data: feeEstimate.Bytes()},
 		}, nil
 
 	} else {

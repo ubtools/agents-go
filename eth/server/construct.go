@@ -68,7 +68,6 @@ func (srv *EthServer) CreateTransfer(ctx context.Context, req *services.CreateTr
 		data = append(data, paddedAddress...)
 		data = append(data, paddedAmount...)
 
-		srv.Log.Debug("estimating gas", "from", req.From, "to", req.To, "tokenAddress", tokenAddress)
 		gasLimit, err := rpc.AdoptClient(srv.C).EstimateGas(ctx, ethereum.CallMsg{
 			From: fromAddress,
 			To:   &tokenAddress,
