@@ -93,15 +93,16 @@ func ValidateAddress(address string) bool {
 }
 
 var Instance = b.Blockchain{
-	Type:            CODE_STR,
-	TypeNum:         CODE_NUM,
-	Decimals:        DECIMALS,
-	SignatureType:   eth.Instance.SignatureType,
-	GenerateAccount: TronRandomKey,
-	ValidateAddress: ValidateAddress,
-	RecoverAddress:  RecoverAddress,
-	Sign:            eth.SignData,
-	Verify:          eth.VerifyData,
+	Type:                 CODE_STR,
+	TypeNum:              CODE_NUM,
+	Decimals:             DECIMALS,
+	SignatureType:        eth.Instance.SignatureType,
+	GenerateAccount:      TronRandomKey,
+	ValidateAddress:      ValidateAddress,
+	RecoverAddress:       RecoverAddress,
+	PublicFromPrivateKey: eth.PublicKeyFromPrivateKey,
+	Sign:                 eth.SignData,
+	Verify:               eth.VerifyData,
 }
 
 func init() {

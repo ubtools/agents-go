@@ -73,15 +73,16 @@ func VerifyData(data []byte, sig []byte, pk []byte) bool {
 }
 
 var Instance = b.Blockchain{
-	Type:            CODE_STR,
-	TypeNum:         CODE_NUM,
-	Decimals:        DECIMALS,
-	SignatureType:   "secp256k1",
-	GenerateAccount: RandomKey,
-	ValidateAddress: common.IsHexAddress,
-	RecoverAddress:  RecoverAddress,
-	Sign:            SignData,
-	Verify:          VerifyData,
+	Type:                 CODE_STR,
+	TypeNum:              CODE_NUM,
+	Decimals:             DECIMALS,
+	SignatureType:        "secp256k1",
+	GenerateAccount:      RandomKey,
+	ValidateAddress:      common.IsHexAddress,
+	RecoverAddress:       RecoverAddress,
+	PublicFromPrivateKey: PublicKeyFromPrivateKey,
+	Sign:                 SignData,
+	Verify:               VerifyData,
 }
 
 func init() {

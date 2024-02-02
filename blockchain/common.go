@@ -7,6 +7,7 @@ type Verifier func(data []byte, signature []byte, publicKey []byte) bool
 type KeyGenerator func(rand io.Reader) (*KeyPair, error)
 type AddressValidator func(addr string) bool
 type AddressFromKeys func(publicKey []byte, privateKey []byte) (string, error)
+type PublicFromPrivateKey func(privateKey []byte) ([]byte, error)
 
 type KeyPair struct {
 	Address    string
@@ -29,15 +30,16 @@ func GetBlockchain(t string) *Blockchain {
 }
 
 type Blockchain struct {
-	Type            string           // slip-044 coin name
-	TypeNum         uint             // slip-044 coin number
-	Decimals        uint             // native currency decimals
-	SignatureType   string           // e.g. secp256k1
-	Sign            Signer           // sign any arbitrary data
-	Verify          Verifier         // verify any arbitrary data
-	GenerateAccount KeyGenerator     // offline generate a new account/address
-	ValidateAddress AddressValidator // validate address
-	RecoverAddress  AddressFromKeys  // recover address from public and/or private key
+	Type                 string               // slip-044 coin name
+	TypeNum              uint                 // slip-044 coin number
+	Decimals             uint                 // native currency decimals
+	SignatureType        string               // e.g. secp256k1
+	Sign                 Signer               // sign any arbitrary data
+	Verify               Verifier             // verify any arbitrary data
+	GenerateAccount      KeyGenerator         // offline generate a new account/address
+	ValidateAddress      AddressValidator     // validate address
+	PublicFromPrivateKey PublicFromPrivateKey // get public key from private
+	RecoverAddress       AddressFromKeys      // recover address from public and/or private key
 }
 
 func (b *Blockchain) String() string {

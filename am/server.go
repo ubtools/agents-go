@@ -66,7 +66,7 @@ type AMServer struct {
 }
 
 func (s *AMServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAccountRequest) (*ubt_am.CreateAccountResponse, error) {
-	slog.Debug("CreateAccount", "req", req)
+	slog.Debug("CreateAccount", "chainType", req.ChainType, "name", req.Name, "pkLen", len(req.PrivateKey))
 	bc := blockchain.GetBlockchain(req.ChainType)
 	if bc == nil {
 		return nil, rpcerrors.ErrInvalidChainId
@@ -88,7 +88,10 @@ func (s *AMServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAccountR
 		}
 
 		slog.Debug("AddressFromPK", "chainType", req.ChainType, "address", address)
-
+		publicKey, err = bc.PublicFromPrivateKey(req.PrivateKey)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		kp, err := bc.GenerateAccount(rand.Reader)
 		if err != nil {
@@ -103,10 +106,16 @@ func (s *AMServer) CreateAccount(ctx context.Context, req *ubt_am.CreateAccountR
 		address = kp.Address
 	}
 
+	var name *string = nil
+	if req.Name != "" {
+		name = &req.Name
+	}
+
 	err = s.db.Save(&Account{
-		Name:        &req.Name,
+		Name:        name,
 		NetworkType: req.ChainType,
 		PK:          encryptedKey,
+		PublicKey:   publicKey,
 		Address:     address,
 	}).Error
 	if err != nil {
