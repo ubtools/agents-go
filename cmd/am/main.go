@@ -20,6 +20,7 @@ import (
 	_ "github.com/ubtr/ubt-go/blockchain/eth"
 	_ "github.com/ubtr/ubt-go/blockchain/trx"
 	"github.com/ubtr/ubt-go/cmd/cmdutil"
+	"github.com/ubtr/ubt-go/commons/conv/hexconv"
 
 	am "github.com/ubtr/ubt-go/am"
 
@@ -122,6 +123,49 @@ func main() {
 				Action: func(cCtx *cli.Context) error {
 					srv := am.InitAMServer(cCtx.String("db"), []byte(cCtx.String("enckey")))
 					res, err := srv.CreateAccount(context.TODO(), &ubt_am.CreateAccountRequest{ChainType: cCtx.String("chain"), Name: cCtx.String("name")})
+					if err != nil {
+						return err
+					}
+					fmt.Printf("Name: %s\n", cCtx.String("name"))
+					fmt.Printf("Address: %s\n", res.Address)
+					return nil
+				},
+			},
+			{
+				Name:  "import",
+				Usage: "Import account from pk hex",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "chain",
+						Value: "ETH",
+						Usage: "Chain type",
+					},
+					&cli.StringFlag{
+						Name:  "name",
+						Usage: "Optional unique name to be associated with this account",
+					},
+					&cli.StringFlag{
+						Name:  "db",
+						Value: "host=localhost user=postgres password=postgres dbname=am",
+						Usage: "Database connection string",
+					},
+					&cli.StringFlag{
+						Name:  "enckey",
+						Usage: "Encryption key. If not provided private keys will be stored unencrypted",
+					},
+				},
+				ArgsUsage: "pk",
+				Action: func(cCtx *cli.Context) error {
+					srv := am.InitAMServer(cCtx.String("db"), []byte(cCtx.String("enckey")))
+					if cCtx.NArg() < 1 {
+						return fmt.Errorf("pk required")
+					}
+					pkHex := cCtx.Args().First()
+					res, err := srv.CreateAccount(context.TODO(), &ubt_am.CreateAccountRequest{
+						ChainType:  cCtx.String("chain"),
+						Name:       cCtx.String("name"),
+						PrivateKey: hexconv.FromHex(pkHex),
+					})
 					if err != nil {
 						return err
 					}
