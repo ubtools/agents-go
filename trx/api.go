@@ -89,10 +89,9 @@ type TriggerContractRequest struct {
 	OwnerAddress    string `json:"owner_address"`
 	ContractAddress string `json:"contract_address"`
 	FeeLimit        uint64 `json:"fee_limit"`
-	//FunctionSelector string `json:"function_selector"`
-	CallValue uint64 `json:"call_value"`
-	Data      string `json:"data"`
-	Visible   bool   `json:"visible"`
+	CallValue       uint64 `json:"call_value"`
+	Data            string `json:"data"`
+	Visible         bool   `json:"visible"`
 }
 
 type TriggerSmartContractResponse struct {
@@ -135,7 +134,6 @@ func (c *TrxApiClient) TriggerSmartContract(ctx context.Context, req TriggerCont
 }
 
 type BroadcastTransactionRequest struct {
-	//TxId    string          `json:"txID"`
 	Visible   bool            `json:"visible"`
 	RawData   json.RawMessage `json:"raw_data"`
 	Signature []string        `json:"signature"`
