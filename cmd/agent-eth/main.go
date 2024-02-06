@@ -32,8 +32,6 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
-
-	ethereum_log "github.com/ethereum/go-ethereum/log"
 )
 
 func main() {
@@ -76,9 +74,9 @@ func main() {
 			cmdutil.InitLogger(cCtx.String("log"))
 
 			//specific(ethereum)
-			if slog.Default().Enabled(cCtx.Context, slog.LevelDebug) {
-				ethereum_log.Root().SetHandler(ethereum_log.StreamHandler(os.Stdout, ethereum_log.LogfmtFormat()))
-			}
+			//if slog.Default().Enabled(cCtx.Context, slog.LevelDebug) {
+			//	ethereum_log.Root().SetHandler(ethereum_log.StreamHandler(os.Stdout, ethereum_log.LogfmtFormat()))
+			//}
 			// enable eth compatible chains
 			agent.AgentFactories[bnb.CODE_STR] = agent.AgentFactories[eth.CODE_STR]
 			//end

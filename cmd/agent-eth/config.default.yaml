@@ -5,7 +5,7 @@ chains:
       SEPOLIA:
         testnet: true
         rpcUrls: 
-          - url: https://rpc-sepolia.rockx.com
+          - url: https://rpc.ankr.com/eth_sepolia
       GOERLI:
         testnet: true
         rpcUrls: 
