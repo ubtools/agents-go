@@ -111,7 +111,7 @@ func (c *BalancedClient) Start() *BalancedClient {
 func (c *BalancedClient) BatchCallContext(ctx context.Context, batch *jsonrpc.RpcBatch) (err error) {
 	if c.Log.Enabled(ctx, slog.LevelDebug) {
 		for _, elem := range batch.Calls {
-			c.Log.Debug("BatchRequest", "method", elem.Method, "args", elem.Params)
+			c.Log.DebugContext(ctx, "BatchRequest", "method", elem.Method, "args", elem.Params)
 		}
 	}
 	err = c.Balancer.CallW(ctx, func(ctx context.Context, us Upstream) error {
@@ -122,7 +122,7 @@ func (c *BalancedClient) BatchCallContext(ctx context.Context, batch *jsonrpc.Rp
 	})
 	if c.Log.Enabled(ctx, slog.LevelDebug) {
 		for _, elem := range batch.Calls {
-			c.Log.Debug("BatchResponse", "method", elem.Method, "result", elem.Result, "error", elem.Error)
+			c.Log.DebugContext(ctx, "BatchResponse", "method", elem.Method, "result", elem.Result, "error", elem.Error)
 		}
 	}
 	return err
@@ -130,7 +130,7 @@ func (c *BalancedClient) BatchCallContext(ctx context.Context, batch *jsonrpc.Rp
 
 func (c *BalancedClient) CallContext(ctx context.Context, raw *jsonrpc.RawCall) (err error) {
 	if c.Log.Enabled(ctx, slog.LevelDebug) {
-		c.Log.Debug("Request", "method", raw.Method, "args", raw.Params)
+		c.Log.DebugContext(ctx, "Request", "method", raw.Method, "args", raw.Params)
 	}
 	err = c.Balancer.CallW(ctx, func(ctx context.Context, us Upstream) error {
 		start := time.Now()
@@ -139,7 +139,7 @@ func (c *BalancedClient) CallContext(ctx context.Context, raw *jsonrpc.RawCall) 
 		return res
 	})
 	if c.Log.Enabled(ctx, slog.LevelDebug) {
-		c.Log.Debug("Response", "method", raw.Method, "result", raw.Result, "error", raw.Error)
+		c.Log.DebugContext(ctx, "Response", "method", raw.Method, "result", raw.Result, "error", raw.Error)
 	}
 	return err
 }

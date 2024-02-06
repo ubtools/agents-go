@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ubtr/ubt-go/commons/jsonrpc"
@@ -44,7 +43,7 @@ func (c *EthRpcClient) BatchCallContext(ctx context.Context, batch *jsonrpc.RpcB
 	for i, call := range batch.Calls {
 		call.Error = elems[i].Error
 	}
-	slog.With(ctx).Debug("EthBatchResponse", "result", res)
+
 	return res
 }
 
