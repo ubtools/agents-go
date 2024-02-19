@@ -19,7 +19,8 @@ func (tx *RpcTx) UnmarshalJSON(input []byte) error {
 	fixedInput, err := commons.FixJsonFields(input, true,
 		[]string{"nonce"}, commons.FixerHexStripLeadingZeros,
 		[]string{"r"}, commons.FixerHexStripLeadingZeros,
-		[]string{"s"}, commons.FixerHexStripLeadingZeros)
+		[]string{"s"}, commons.FixerHexStripLeadingZeros,
+		[]string{"v"}, commons.FixerHexStripLeadingZeros)
 	if err != nil {
 		return err
 	}
