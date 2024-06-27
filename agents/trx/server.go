@@ -10,19 +10,21 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/shengdoushi/base58"
 	"github.com/ubtr/ubt-go/agent"
+	"github.com/ubtr/ubt-go/agents/eth/contracts/erc20"
+	"github.com/ubtr/ubt-go/agents/eth/server"
 	"github.com/ubtr/ubt-go/blockchain"
 	"github.com/ubtr/ubt-go/blockchain/trx"
 	"github.com/ubtr/ubt-go/commons/cache"
 	"github.com/ubtr/ubt-go/commons/conv/uint256conv"
 	"github.com/ubtr/ubt-go/commons/rpcerrors"
-	"github.com/ubtr/ubt-go/eth/contracts/erc20"
-	"github.com/ubtr/ubt-go/eth/server"
+	"github.com/ubtr/ubt/go/api/proto"
 	"github.com/ubtr/ubt/go/api/proto/services"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 const ERC20_FEE_LIMIT = 20000000
+const BlockTimeSec = 3
 
 func init() {
 	agent.AgentFactories[trx.CODE_STR] = func(ctx context.Context, config *agent.ChainConfig) agent.UbtAgent {
@@ -44,6 +46,16 @@ var TrxExtensions = server.Extensions{
 		addressTron = append(addressTron, trx.TronBytePrefix)
 		addressTron = append(addressTron, address.Bytes()...)
 		return trx.Address(addressTron).String()
+	},
+	BlockFinalityStatus: func(block *proto.Block) proto.FinalityStatus {
+		// https://tronprotocol.github.io/documentation-en/introduction/dpos/#:~:text=Block%20time%3A%20TRON%20sets%20block,will%20take%20up%20a%20slot.
+		if uint64(block.Header.Timestamp.Seconds) < uint64(time.Now().Unix())-27*BlockTimeSec {
+			return proto.FinalityStatus_FINALITY_STATUS_FINALIZED
+		} else if uint64(block.Header.Timestamp.Seconds) < uint64(time.Now().Unix())-19*BlockTimeSec {
+			return proto.FinalityStatus_FINALITY_STATUS_SAFE
+		} else {
+			return proto.FinalityStatus_FINALITY_STATUS_UNSAFE
+		}
 	},
 }
 

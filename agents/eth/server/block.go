@@ -8,9 +8,9 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ubtr/ubt-go/agent"
+	"github.com/ubtr/ubt-go/agents/eth/rpc"
+	ethtypes "github.com/ubtr/ubt-go/agents/eth/types"
 	"github.com/ubtr/ubt-go/commons/jsonrpc/client"
-	"github.com/ubtr/ubt-go/eth/rpc"
-	ethtypes "github.com/ubtr/ubt-go/eth/types"
 	"github.com/ubtr/ubt/go/api/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -25,10 +25,13 @@ type BlockConverter struct {
 
 const slotTimeSec = uint64(12)
 
-func (srv *BlockConverter) getBlockFinalityStatus(block *ethtypes.HeaderWithBody) proto.FinalityStatus {
-	if block.Header.Time < uint64(time.Now().Unix())-54*slotTimeSec {
+func (srv *BlockConverter) getBlockFinalityStatus(block *proto.Block) proto.FinalityStatus {
+	if srv.Srv.Extensions.BlockFinalityStatus != nil {
+		return srv.Srv.Extensions.BlockFinalityStatus(block)
+	}
+	if uint64(block.Header.Timestamp.Seconds) < uint64(time.Now().Unix())-54*slotTimeSec {
 		return proto.FinalityStatus_FINALITY_STATUS_FINALIZED
-	} else if block.Header.Time < uint64(time.Now().Unix())-32*slotTimeSec {
+	} else if uint64(block.Header.Timestamp.Seconds) < uint64(time.Now().Unix())-32*slotTimeSec {
 		return proto.FinalityStatus_FINALITY_STATUS_SAFE
 	} else {
 		return proto.FinalityStatus_FINALITY_STATUS_UNSAFE
@@ -61,14 +64,14 @@ func (c *BlockConverter) loadAndGroupLogs(block *ethtypes.HeaderWithBody) (map[u
 func (c *BlockConverter) EthBlockToProto(block *ethtypes.HeaderWithBody) (*proto.Block, error) {
 	ret := &proto.Block{
 		Header: &proto.BlockHeader{
-			Id:             block.BlockHash.Bytes(),
-			Number:         block.Header.Number.Uint64(),
-			ParentId:       block.Header.ParentHash.Bytes(),
-			Timestamp:      timestamppb.New(time.Unix(int64(block.Header.Time), 0)),
-			FinalityStatus: c.getBlockFinalityStatus(block),
+			Id:        block.BlockHash.Bytes(),
+			Number:    block.Header.Number.Uint64(),
+			ParentId:  block.Header.ParentHash.Bytes(),
+			Timestamp: timestamppb.New(time.Unix(int64(block.Header.Time), 0)),
 		},
 		Transactions: []*proto.Transaction{},
 	}
+	ret.Header.FinalityStatus = c.getBlockFinalityStatus(ret)
 
 	logs, err := c.loadAndGroupLogs(block)
 	if err != nil {

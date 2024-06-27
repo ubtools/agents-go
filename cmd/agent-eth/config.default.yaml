@@ -6,11 +6,6 @@ chains:
         testnet: true
         rpcUrls: 
           - url: https://rpc.ankr.com/eth_sepolia
-      GOERLI:
-        testnet: true
-        rpcUrls: 
-          - url: https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161	
-            name: infura_custom_goerli
   TRX:
     networks:
       NILE:
@@ -24,6 +19,6 @@ chains:
       TESTNET:
         testnet: true
         rpcUrls:
-          - url: https://rpc.ankr.com/bsc_testnet_chapel
+          - url: https://rpc.ankr.com/bsc_testnet_chapel/c4edfff08323d5dd4c22c84f688176debec7a3ddcd6319751e8626f77a81e1b9
 
 

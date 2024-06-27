@@ -10,13 +10,13 @@ import (
 
 	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/ubtr/ubt-go/agent"
+	ethrpc "github.com/ubtr/ubt-go/agents/eth/rpc"
+	ethtypes "github.com/ubtr/ubt-go/agents/eth/types"
 	"github.com/ubtr/ubt-go/blockchain/eth"
 	"github.com/ubtr/ubt-go/commons"
 	"github.com/ubtr/ubt-go/commons/jsonrpc"
 	"github.com/ubtr/ubt-go/commons/jsonrpc/client"
 	"github.com/ubtr/ubt-go/commons/rpcerrors"
-	ethrpc "github.com/ubtr/ubt-go/eth/rpc"
-	ethtypes "github.com/ubtr/ubt-go/eth/types"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -37,8 +37,9 @@ func init() {
 
 // extension hooks to tune behaviour of different eth-like chains
 type Extensions struct {
-	AddressFromString func(address string) (common.Address, error)
-	AddressToString   func(address common.Address) string
+	AddressFromString   func(address string) (common.Address, error)
+	AddressToString     func(address common.Address) string
+	BlockFinalityStatus func(block *proto.Block) proto.FinalityStatus
 }
 
 type EthServer struct {
@@ -219,7 +220,7 @@ func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 
 	srv.Log.Debug("Blocks received", "count", len(blockReqs))
 
-	for _, blockReq := range blockReqs {
+	for idx, blockReq := range blockReqs {
 		err := blockReq.ProcessRes(res.Context())
 		if err != nil {
 			return err
@@ -230,6 +231,13 @@ func (srv *EthServer) ListBlocks(req *services.ListBlocksRequest, res services.U
 		if err != nil {
 			srv.Log.Error("Error converting block", "error", err)
 			return err
+		}
+		if block.Header.FinalityStatus < req.FinalityStatus {
+			if idx > 0 {
+				break
+			} else {
+				return rpcerrors.ErrBlockOutOfRange
+			}
 		}
 		srv.Log.Debug("Send processed block", "txCount", len(block.Transactions))
 		err = res.Send(block)

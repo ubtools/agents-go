@@ -7,7 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	ethtypes "github.com/ubtr/ubt-go/eth/types"
+	ethtypes "github.com/ubtr/ubt-go/agents/eth/types"
 	"github.com/ubtr/ubt/go/api/proto"
 )
 

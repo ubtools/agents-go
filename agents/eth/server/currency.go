@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"github.com/eko/gocache/lib/v4/store"
+	"github.com/ubtr/ubt-go/agents/eth/contracts/erc20"
+	"github.com/ubtr/ubt-go/agents/eth/rpc"
 	"github.com/ubtr/ubt-go/blockchain"
 	"github.com/ubtr/ubt-go/commons/rpcerrors"
-	"github.com/ubtr/ubt-go/eth/contracts/erc20"
-	"github.com/ubtr/ubt-go/eth/rpc"
 
 	"github.com/ubtr/ubt/go/api/proto"
 	"github.com/ubtr/ubt/go/api/proto/services"

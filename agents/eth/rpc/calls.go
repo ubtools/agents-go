@@ -5,8 +5,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethtypes "github.com/ubtr/ubt-go/agents/eth/types"
 	"github.com/ubtr/ubt-go/commons/jsonrpc"
-	ethtypes "github.com/ubtr/ubt-go/eth/types"
 )
 
 func GetBlockNumber() *jsonrpc.RpcCall[uint64] {

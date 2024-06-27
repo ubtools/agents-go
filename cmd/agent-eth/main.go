@@ -16,17 +16,16 @@ import (
 
 	"github.com/ubtr/ubt-go/agent"
 	"github.com/ubtr/ubt-go/blockchain"
-	"github.com/ubtr/ubt-go/blockchain/bnb"
 	_ "github.com/ubtr/ubt-go/blockchain/bnb"
-	"github.com/ubtr/ubt-go/blockchain/eth"
 	_ "github.com/ubtr/ubt-go/blockchain/eth"
 	_ "github.com/ubtr/ubt-go/blockchain/trx"
 
 	"github.com/ubtr/ubt-go/cmd/cmdutil"
 
-	_ "github.com/ubtr/ubt-go/eth/server"
+	_ "github.com/ubtr/ubt-go/agents/bnb"
+	_ "github.com/ubtr/ubt-go/agents/eth/server"
+	_ "github.com/ubtr/ubt-go/agents/trx"
 	"github.com/ubtr/ubt-go/proxy"
-	_ "github.com/ubtr/ubt-go/trx"
 
 	"github.com/ubtr/ubt/go/api/proto/services"
 
@@ -72,14 +71,6 @@ func main() {
 		},
 		Action: func(cCtx *cli.Context) error {
 			cmdutil.InitLogger(cCtx.String("log"))
-
-			//specific(ethereum)
-			//if slog.Default().Enabled(cCtx.Context, slog.LevelDebug) {
-			//	ethereum_log.Root().SetHandler(ethereum_log.StreamHandler(os.Stdout, ethereum_log.LogfmtFormat()))
-			//}
-			// enable eth compatible chains
-			agent.AgentFactories[bnb.CODE_STR] = agent.AgentFactories[eth.CODE_STR]
-			//end
 
 			supportedChains := []string{}
 			for k := range blockchain.Blockchains {
